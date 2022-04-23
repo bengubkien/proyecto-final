@@ -44,9 +44,8 @@ BEGIN
   integrator1_process : PROCESS (clk)
   BEGIN
     if integrator_rst = '0' then
-        integrator_out1 <= to_signed(0, 32);
+        integrator1_out1 <= to_signed(0, 32);
     end if;
-  BEGIN
     IF rising_edge(clk) THEN
       integrator1_out1 <= i_add_out1;
     END IF;
