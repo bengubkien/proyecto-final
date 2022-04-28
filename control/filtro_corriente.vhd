@@ -1,49 +1,47 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
 
-entity filtro_corriente is
-	port (
-		clk : in std_logic;
-		filtro_corriente_in : in std_logic_vector(11 downto 0);
-		filtro_corriente_out : out std_logic_vector(11 downto 0)
-	);
-end filtro_corriente;
+ENTITY filtro_corriente IS
+  PORT( clk                               :   IN    std_logic;
+        filtro_corriente_in               :   IN    std_logic_vector(11 DOWNTO 0);
+        filtro_corriente_out              :   OUT   std_logic_vector(11 DOWNTO 0)
+        );
+END filtro_corriente;
 
-architecture behavioral of filtro_corriente is
 
-	signal filtro_corriente_in_unsigned : unsigned(15 downto 0);
-	signal conversion_in_out1 : signed(31 downto 0);
-	signal k_0_mul_temp : signed(63 downto 0);
-	signal k_0_out1 : signed(31 downto 0);
-	signal x_n_1_out1 : signed(32 downto 0) := to_signed(0, 33);
-	signal k_1_mul_temp : signed(65 downto 0);
-	signal k_1_out1 : signed(31 downto 0);
-	signal add_out1 : signed(32 downto 0);
-	signal conversion_out_out1 : unsigned(15 downto 0);
+ARCHITECTURE rtl OF filtro_corriente IS
 
-begin
-	filtro_corriente_in_unsigned <= resize(unsigned(filtro_corriente_in), 16);
+     SIGNAL filtro_corriente_in_unsigned     : unsigned(11 DOWNTO 0);
+  SIGNAL k_0_mul_temp                     : unsigned(23 DOWNTO 0);
+  SIGNAL k_0_out1                         : signed(31 DOWNTO 0);
+  SIGNAL x_n_1_out1                       : signed(32 DOWNTO 0) := to_signed(0, 33);
+  SIGNAL k_1_mul_temp                     : signed(65 DOWNTO 0);
+  SIGNAL k_1_out1                         : signed(31 DOWNTO 0);
+  SIGNAL add_out1                         : signed(32 DOWNTO 0);
+  SIGNAL conversion_out_out1              : unsigned(11 DOWNTO 0);
 
-	conversion_in_out1 <= signed(filtro_corriente_in_unsigned & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0');
+BEGIN
+  filtro_corriente_in_unsigned <= unsigned(filtro_corriente_in);
 
-	k_0_mul_temp <= to_signed(1839373002, 32) * conversion_in_out1;
-	k_0_out1 <= resize(k_0_mul_temp(63 downto 37), 32);
+  k_0_mul_temp <= to_unsigned(16#C10#, 12) * filtro_corriente_in_unsigned;
+  k_0_out1 <= signed(resize(k_0_mul_temp & '0', 32));
 
-	k_1_mul_temp <= signed'("011111100100100101110111010000101") * x_n_1_out1;
-	k_1_out1 <= k_1_mul_temp(63 downto 32);
+  k_1_mul_temp <= signed'("011100111110111110101110011110010") * x_n_1_out1;
+  k_1_out1 <= k_1_mul_temp(63 DOWNTO 32);
 
-	add_out1 <= (resize(k_0_out1, 33)) + (resize(k_1_out1, 33));
+  add_out1 <= (resize(k_0_out1, 33)) + (resize(k_1_out1, 33));
 
-	x_n_1_process : process (clk)
-	begin
-		if rising_edge(clk) then
-			x_n_1_out1 <= add_out1;
-		end if;
-	end process x_n_1_process;
+  x_n_1_process : PROCESS (clk)
+  BEGIN
+    IF rising_edge(clk) THEN
+      x_n_1_out1 <= add_out1;
+    END IF;
+  END PROCESS x_n_1_process;
 
-	conversion_out_out1 <= unsigned(x_n_1_out1(31 downto 16));
 
-	filtro_corriente_out <= std_logic_vector(resize(conversion_out_out1, 12));
+  conversion_out_out1 <= unsigned(x_n_1_out1(27 DOWNTO 16));
 
-end behavioral;
+  filtro_corriente_out <= std_logic_vector(conversion_out_out1);
+
+END rtl;

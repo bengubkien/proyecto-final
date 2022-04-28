@@ -1,224 +1,193 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_unsigned.all;
+--------------------------------------------------------------------------------
+--
+--   FileName:         pmod_adc_ad7991.vhd
+--   Dependencies:     i2c_master.vhd (Version 2.2)
+--   Design Software:  Quartus Prime Version 17.0.0 Build 595 SJ Lite Edition
+--
+--   HDL CODE IS PROVIDED "AS IS."  DIGI-KEY EXPRESSLY DISCLAIMS ANY
+--   WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT
+--   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+--   PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL DIGI-KEY
+--   BE LIABLE FOR ANY INCIDENTAL, SPECIAL, INDIRECT OR CONSEQUENTIAL
+--   DAMAGES, LOST PROFITS OR LOST DATA, HARM TO YOUR EQUIPMENT, COST OF
+--   PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY OR SERVICES, ANY CLAIMS
+--   BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF),
+--   ANY CLAIMS FOR INDEMNITY OR CONTRIBUTION, OR OTHER SIMILAR COSTS.
+--
+--   Version History
+--   Version 1.0 09/18/2020 Scott Larson
+--     Initial Public Release
+-- 
+--------------------------------------------------------------------------------
 
-entity adc_controller is
-	port (
-		clk : in std_logic; 
-		rst : in std_logic;
- 
-		sdata_1 : in std_logic; 
-		sdata_2 : in std_logic;
-		sclk : out std_logic;
-		cs : out std_logic;
- 
-		data_1 : out std_logic_vector(11 downto 0);
-		data_2 : out std_logic_vector(11 downto 0);
-		start : in std_logic;
-		done : out std_logic 
-	);
- 
-end adc_controller;
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
 
-architecture behavioral of adc_controller is
+ENTITY adc_controller IS
+  GENERIC(
+    sys_clk_freq : INTEGER := 50_000_000);                --input clock speed from user logic in Hz
+  PORT(
+    clk          : IN    STD_LOGIC;                       --system clock
+    reset_n      : IN    STD_LOGIC;                       --asynchronous active-low reset
+    scl          : INOUT STD_LOGIC;                       --I2C serial clock
+    sda          : INOUT STD_LOGIC;                       --I2C serial data
+    i2c_ack_err  : OUT   STD_LOGIC;                       --I2C slave acknowledge error flag
+    adc_ch0_data : OUT   STD_LOGIC_VECTOR(11 DOWNTO 0);   --ADC Channel 0 data obtained
+    adc_ch1_data : OUT   STD_LOGIC_VECTOR(11 DOWNTO 0);   --ADC Channel 1 data obtained
+    adc_ch2_data : OUT   STD_LOGIC_VECTOR(11 DOWNTO 0);   --ADC Channel 2 data obtained
+    adc_ch3_data : OUT   STD_LOGIC_VECTOR(11 DOWNTO 0));  --ADC Channel 3 data obtained
+END adc_controller;
 
-	--------------------------------------------------------------------------------
-	-- SEALES
-	--
-	-- Las siguientes seales son utilizadas:
-	--
-	-- current_state: Estado actual de la mquina de estados del controlador
-	--
-	-- next_state : Siguiente estado de la mquina de estados del controlador
-	-- 
-	-- aux_1 : Vector auxiliar que almacena los 16 bits provenientes del primer ADC del Pmod
-	--
-	-- aux_2 : Vector auxiliar que almacena los 16 bits provenientes del segundo ADC del Pmod
-	-- 
-	-- data_1 : Vector que almacena los 12 bits de datos del primer ADC del Pmod
-	-- 
-	-- data_2 : Vector que almacena los 12 bits de datos del segundo ADC del Pmod
-	-- 
-	-- clk_div : Seal de 100MHz/8 = 12MHz que se utiliza como reloj para el Pmod
-	-- 
-	-- clk_counter : Contador utilizado para el divisor de frecuencias
-	--
-	-- shift_cnt : Contador utilizado para shiftear los bits de los ADC a "aux_1" y "aux_2"
-	-- 
-	-- en_shift_cnt : Seal utilizada como enable para shiftear los bits de los ADC a "aux_1" y "aux_2".
-	-- 
-	-- en_load : Seal utilizada como enable para cargar los 12 bits de datos a "data_1" y "data_2"
-	--------------------------------------------------------------------------------
+ARCHITECTURE behavior OF adc_controller IS
+  TYPE machine IS(start, read_data, output_result);     --needed states
+  SIGNAL state        : machine;                        --state machine
+  SIGNAL config       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --value to set the Sensor Configuration Register
+  SIGNAL i2c_ena      : STD_LOGIC;                      --i2c enable signal
+  SIGNAL i2c_addr     : STD_LOGIC_VECTOR(6 DOWNTO 0);   --i2c address signal
+  SIGNAL i2c_rw       : STD_LOGIC;                      --i2c read/write command signal
+  SIGNAL i2c_data_wr  : STD_LOGIC_VECTOR(7 DOWNTO 0);   --i2c write data
+  SIGNAL i2c_data_rd  : STD_LOGIC_VECTOR(7 DOWNTO 0);   --i2c read data
+  SIGNAL i2c_busy     : STD_LOGIC;                      --i2c busy signal
+  SIGNAL busy_prev    : STD_LOGIC;                      --previous value of i2c busy signal
+  SIGNAL adc_buffer_a : STD_LOGIC_VECTOR(15 DOWNTO 0);  --ADC Channel 0 data buffer
+  SIGNAL adc_buffer_b : STD_LOGIC_VECTOR(15 DOWNTO 0);  --ADC Channel 1 data buffer
+  SIGNAL adc_buffer_c : STD_LOGIC_VECTOR(15 DOWNTO 0);  --ADC Channel 2 data buffer
+  SIGNAL adc_buffer_d : STD_LOGIC_VECTOR(15 DOWNTO 0);  --ADC Channel 3 data buffer
 
-	type states is (idle, 
-	shift, 
-	sync); 
- 
-	signal current_state : states;
-	signal next_state : states;
- 
-	signal aux_1 			: std_logic_vector(15 downto 0) := (others => '0');
-	signal aux_2 			: std_logic_vector(15 downto 0) := (others => '0');
-	signal data_sgn_1 	: std_logic_vector(11 downto 0) := x"000";
-	signal data_sgn_2 	: std_logic_vector(11 downto 0) := x"000"; 
-	signal clk_div 		: std_logic; 
-	signal clk_cnt 		: integer := 1; 
-	signal shift_cnt 		: std_logic_vector(3 downto 0) := x"0";
-	signal en_shift_cnt 	: std_logic;
-	signal en_load 		: std_logic;
+  COMPONENT i2c_master IS
+    GENERIC(
+      input_clk : INTEGER;  --input clock speed from user logic in Hz
+      bus_clk   : INTEGER); --speed the i2c bus (scl) will run at in Hz
+    PORT(
+      clk       : IN     STD_LOGIC;                    --system clock
+      reset_n   : IN     STD_LOGIC;                    --active low reset
+      ena       : IN     STD_LOGIC;                    --latch in command
+      addr      : IN     STD_LOGIC_VECTOR(6 DOWNTO 0); --address of target slave
+      rw        : IN     STD_LOGIC;                    --'0' is write, '1' is read
+      data_wr   : IN     STD_LOGIC_VECTOR(7 DOWNTO 0); --data to write to slave
+      busy      : OUT    STD_LOGIC;                    --indicates transaction in progress
+      data_rd   : OUT    STD_LOGIC_VECTOR(7 DOWNTO 0); --data read from slave
+      ack_error : BUFFER STD_LOGIC;                    --flag if improper acknowledge from slave
+      sda       : INOUT  STD_LOGIC;                    --serial data output of i2c bus
+      scl       : INOUT  STD_LOGIC);                   --serial clock output of i2c bus
+  END COMPONENT;
 
-begin
+BEGIN
 
-	--------------------------------------------------------------------------------
-	-- CLK_DIV_PROC
-	--
-	-- Proceso que genera un reloj de 12MHz para los ADC del Pmod.
-	-------------------------------------------------------------------------------- 
+  --instantiate the i2c master
+  i2c_master_0:  i2c_master
+    GENERIC MAP(input_clk => sys_clk_freq, bus_clk => 400_000)
+    PORT MAP(clk => clk, reset_n => reset_n, ena => i2c_ena, addr => i2c_addr,
+             rw => i2c_rw, data_wr => i2c_data_wr, busy => i2c_busy,
+             data_rd => i2c_data_rd, ack_error => i2c_ack_err, sda => sda,
+             scl => scl);
 
-	clk_div_proc : process (rst, clk)
-	begin
-		if rst = '1' then
-			clk_cnt <= 1;
-		elsif rising_edge(clk) then
-			clk_cnt <= clk_cnt + 1;
-			if (clk_cnt = 4) then		-- 100MHz/2/4 = 12MHz
-				clk_div <= not clk_div;
-				clk_cnt <= 1;
-			end if;
-		end if; 
-	end process;
+  PROCESS(clk, reset_n)
+    VARIABLE busy_cnt : INTEGER RANGE 0 TO 8 := 0;               --counts the busy signal transistions during one transaction
+    VARIABLE counter  : INTEGER RANGE 0 TO sys_clk_freq/10 := 0; --counts 100ms to wait before communicating
+  BEGIN
+    IF(reset_n = '0') THEN               --reset activated
+      counter := 0;                        --clear wait counter
+      i2c_ena <= '0';                      --clear i2c enable
+      busy_cnt := 0;                       --clear busy counter
+      adc_ch0_data <= (OTHERS => '0');     --clear ADC Channel 0 result output
+      adc_ch1_data <= (OTHERS => '0');     --clear ADC Channel 1 result output
+      adc_ch2_data <= (OTHERS => '0');     --clear ADC Channel 2 result output
+      adc_ch3_data <= (OTHERS => '0');     --clear ADC Channel 3 result output
+      state <= start;                      --return to start state
+    ELSIF(clk'EVENT AND clk = '1') THEN  --rising edge of system clock
+      CASE state IS                        --state machine
+      
+        --give ADC 100ms to power up before communicating
+        WHEN start =>
+          IF(counter < sys_clk_freq/10) THEN   --100ms not yet reached
+            counter := counter + 1;              --increment counter
+          ELSE                                 --100ms reached
+            counter := 0;                        --clear counter
+            state <= read_data;                  --initate ADC conversions and retrieve data
+          END IF;
+        
+        --initiate ADC conversions and retrieve data
+        WHEN read_data =>
+          busy_prev <= i2c_busy;                          --capture the value of the previous i2c busy signal
+          IF(busy_prev = '0' AND i2c_busy = '1') THEN     --i2c busy just went high
+            busy_cnt := busy_cnt + 1;                       --counts the times busy has gone from low to high during transaction
+          END IF;
+          CASE busy_cnt IS                                --busy_cnt keeps track of which command we are on
+            WHEN 0 =>                                       --no command latched in yet
+              i2c_ena <= '1';                                 --initiate the transaction
+              i2c_addr <= "0101001";                          --set the address of the ADC
+              i2c_rw <= '1';                                  --command 1 is a read
+            WHEN 1 =>                                       --1st busy high: command 1 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 1 is ready
+                adc_buffer_a(15 DOWNTO 8) <= i2c_data_rd;       --retrieve MSB data from command 1
+              END IF;
+            WHEN 2 =>                                       --2nd busy high: command 2 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 2 is ready
+                adc_buffer_a(7 DOWNTO 0) <= i2c_data_rd;        --retrieve LSB data from command 2
+              END IF;
+            WHEN 3 =>                                       --3rd busy high: command 3 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 3 is ready
+                adc_buffer_b(15 DOWNTO 8) <= i2c_data_rd;       --retrieve MSB data from command 3
+              END IF;
+            WHEN 4 =>                                       --4th busy high: command 4 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 4 is ready
+                adc_buffer_b(7 DOWNTO 0) <= i2c_data_rd;        --retrieve LSB data from command 4
+              END IF;
+            WHEN 5 =>                                       --5th busy high: command 5 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 5 is ready
+                adc_buffer_c(15 DOWNTO 8) <= i2c_data_rd;       --retrieve MSB data from command 5
+              END IF;
+            WHEN 6 =>                                       --6th busy high: command 6 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 6 is ready
+                adc_buffer_c(7 DOWNTO 0) <= i2c_data_rd;        --retrieve LSB data from command 6
+              END IF;  
+            WHEN 7 =>                                       --7th busy high: command 7 latched, okay to issue command 2
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 7 is ready
+                adc_buffer_d(15 DOWNTO 8) <= i2c_data_rd;       --retrieve MSB data from command 7
+              END IF;          
+            WHEN 8 =>                                       --8th busy high: command 8 latched
+              i2c_ena <= '0';                                 --deassert enable to stop transaction after command 8
+              IF(i2c_busy = '0') THEN                         --indicates data read in command 8 is ready
+                adc_buffer_d(7 DOWNTO 0) <= i2c_data_rd;        --retrieve LSB data from command 8
+                busy_cnt := 0;                                  --reset busy_cnt for next transaction
+                state <= output_result;                         --output the results
+              END IF;
+            WHEN OTHERS => NULL;
+          END CASE;
 
-	sclk <= clk_div;
+        --match received ADC data to outputs
+        WHEN output_result =>
+          CASE adc_buffer_a(13 DOWNTO 12) IS             --determine which channel was read first
+            WHEN "00" =>                                   --first data read was channel 0
+              adc_ch0_data <= adc_buffer_a(11 DOWNTO 0);     --write ADC channel 0 data to output
+              adc_ch1_data <= adc_buffer_b(11 DOWNTO 0);     --write ADC channel 1 data to output
+              adc_ch2_data <= adc_buffer_c(11 DOWNTO 0);     --write ADC channel 2 data to output
+              adc_ch3_data <= adc_buffer_d(11 DOWNTO 0);     --write ADC channel 3 data to output
+            WHEN "01" =>                                   --first data read was channel 1
+              adc_ch1_data <= adc_buffer_a(11 DOWNTO 0);     --write ADC channel 1 data to output
+              adc_ch2_data <= adc_buffer_b(11 DOWNTO 0);     --write ADC channel 2 data to output
+              adc_ch3_data <= adc_buffer_c(11 DOWNTO 0);     --write ADC channel 3 data to output
+              adc_ch0_data <= adc_buffer_d(11 DOWNTO 0);     --write ADC channel 0 data to output
+            WHEN "10" =>                                   --first data read was channel 2
+              adc_ch2_data <= adc_buffer_a(11 DOWNTO 0);     --write ADC channel 2 data to output
+              adc_ch3_data <= adc_buffer_b(11 DOWNTO 0);     --write ADC channel 3 data to output
+              adc_ch0_data <= adc_buffer_c(11 DOWNTO 0);     --write ADC channel 0 data to output
+              adc_ch1_data <= adc_buffer_d(11 DOWNTO 0);     --write ADC channel 1 data to output
+            WHEN "11" =>                                   --first data read was channel 3
+              adc_ch3_data <= adc_buffer_a(11 DOWNTO 0);     --write ADC channel 3 data to output
+              adc_ch0_data <= adc_buffer_b(11 DOWNTO 0);     --write ADC channel 0 data to output
+              adc_ch1_data <= adc_buffer_c(11 DOWNTO 0);     --write ADC channel 1 data to output
+              adc_ch2_data <= adc_buffer_d(11 DOWNTO 0);     --write ADC channel 2 data to output
+            WHEN OTHERS => NULL;
+          END CASE;       
+          state <= read_data;                            --initiate next conversions and retrieve data
 
+        --default to start state
+        WHEN OTHERS =>
+          state <= start;
 
-
-	--------------------------------------------------------------------------------
-	-- REG_SHIFT_PROC
-	
-	-- Debido a que cada ADC produce 16 bits, en donde los cuatro MSB son ceros
-	-- y los otros 12 bits son los datos, se almacenan todos los bits temporalmente
-	-- en "aux_1" y "aux_2" cuando "en_shift_cnt" est activo. 
-	-- Cuando se activa "en_load", los 12 bits de datos de ambos ADC son 
-	-- almacenados en otros dos vectores "data_sgn_1" y "data_sgn_2".
-	-- "shift_cnt" es un contador de 4 bits utilizado para shiftear 16 veces (una
-	-- vez por cada ciclo de reloj) a los registros auxiliares.
-	--------------------------------------------------------------------------------
-	
-	reg_shift_proc : process (clk_div, en_load, en_shift_cnt)
-	begin
-		if rising_edge(clk_div) then
-			if (en_shift_cnt = '1') then
-				aux_1 <= aux_1(14 downto 0) & sdata_1;
-				aux_2 <= aux_2(14 downto 0) & sdata_2; 
-				shift_cnt <= shift_cnt + '1';
-			elsif (en_load = '1') then
-				shift_cnt <= "0000"; 	-- Contador de 4 bits utilizado para shiftear 16 veces.
-				data_sgn_1 <= aux_1(11 downto 0);
-				data_sgn_2 <= aux_2(11 downto 0);
-			end if;
-		end if;
-	end process;
-	
-	data_1 <= data_sgn_1;
-	data_2 <= data_sgn_2;
-	
-	---------------------------------------------------------------------------------
-	--
-	-- MQUINA DE ESTADOS
-	--
-	-- Mquina de estados que posee 3 estados:
-	-- 
-	-- IDLE: No hace nada.
-	--
-	-- SHIFT: Capta los datos de los dos ADC del Pmod y los almacena en registros auxiliares
-	-- 		 de 16 bits.
-	-- 
-	-- SYNC:	Copia los 12 bits de datos captados de ambos ADC de los registros auxiliares a
-	-- 		los puertos de salida correspondientes.
-	--
-	-- Es importante aclarar que ambos ADC empiezan su proceso de muestreo en un flanco 
-	-- descendiente de Chip Select. Por lo tanto "IDLE" y "SYNC" ponen "CS" en alto, y 
-	-- "SHIFT" en bajo.
-	--
-	----------------------------------------------------------------------------------- 
- 
-	-----------------------------------------------------------------------------------
-	--
-	-- SYNC_PROC
-	--
-	-- Proceso en donde los estados son cambiados sincrnicamente.
-	-- 
-	----------------------------------------------------------------------------------- 
-	
-	sync_proc : process (clk_div, rst)
-	begin
-		if rising_edge(clk_div) then
-			if (rst = '1') then
-				current_state <= idle;
-			else
-				current_state <= next_state;
-			end if; 
-		end if;
-	end process;
- 
-	-----------------------------------------------------------------------------------
-	--
-	-- OUTPUT_DECODE_PROC
-	--
-	-- Proceso en donde se generan asincrnicamente las seales de salida basadas 
-	-- solamente en el estado actual.
-	-- 
-	----------------------------------------------------------------------------------- 
-	
-	output_decode_proc : process (current_state)
-	begin
-		if current_state = idle then
-			en_shift_cnt <= '0';
-			done <= '1';
-			cs <= '1';
-			en_load <= '0';
-		elsif current_state = shift then
-			en_shift_cnt <= '1';
-			done <= '0';
-			cs <= '0';
-			en_load <= '0';
-		else --if current_state = sync then
-			en_shift_cnt <= '0';
-			done <= '0';
-			cs <= '1';
-			en_load <= '1';
-		end if;
-	end process; 
- 
-	----------------------------------------------------------------------------------
-	--
-	-- NEXT_STATE_DECODE_PROC
-	--
-	-- Proceso en el cual se decide el prximo estado dependiendo del estado actual y
-	-- las seales de entrada.
-	-- 
-	----------------------------------------------------------------------------------- 
-	
-	next_state_decode_proc : process (current_state, start, shift_cnt)
-	begin
-		next_state <= current_state; -- La mquina tiende a quedarse en el estado actual
- 
-		case (current_state) is
-			when idle => 
-				if start = '1' then
-					next_state <= shift;
-				end if;
-			when shift => 
-				if shift_cnt = x"E" then
-					next_state <= sync;
-				end if;
-			when sync => 
-				if start = '0' then
-					next_state <= idle;
-				end if;
-			when others => 
-				next_state <= idle;
-		end case; 
-	end process;
-end behavioral;
+      END CASE;
+    END IF;
+  END PROCESS;   
+END behavior;

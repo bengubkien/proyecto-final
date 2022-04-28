@@ -4,7 +4,7 @@ USE IEEE.numeric_std.ALL;
 
 ENTITY pi_tension IS
   PORT( clk                               :   IN    std_logic;
-  integrator_rst:   IN    std_logic;
+		  integrator_rst : in std_logic;
         ref_in                            :   IN    std_logic_vector(31 DOWNTO 0);
         tension_in                        :   IN    std_logic_vector(31 DOWNTO 0);
         pi_out                            :   OUT   std_logic_vector(31 DOWNTO 0)
@@ -22,7 +22,7 @@ ARCHITECTURE rtl OF pi_tension IS
   SIGNAL k_i_mul_temp                     : signed(63 DOWNTO 0);
   SIGNAL k_i_out1                         : signed(31 DOWNTO 0);
   SIGNAL i_add_out1                       : signed(31 DOWNTO 0);
-  SIGNAL integrator1_out1                 : signed(31 DOWNTO 0) := to_signed(0, 32);
+  SIGNAL integrator_out1                  : signed(31 DOWNTO 0) := to_signed(0, 32);
   SIGNAL clamping_out1                    : signed(31 DOWNTO 0);
   SIGNAL pi_add_out1                      : signed(31 DOWNTO 0);
   SIGNAL saturation_out1                  : signed(31 DOWNTO 0);
@@ -37,32 +37,36 @@ BEGIN
   k_p_mul_temp <= to_signed(1717986918, 32) * error_out1;
   k_p_out1 <= resize(k_p_mul_temp(63 DOWNTO 36), 32);
 
-  k_i_mul_temp <= to_signed(1407374884, 32) * error_out1;
-  k_i_out1 <= resize(k_i_mul_temp(63 DOWNTO 45), 32) when integrator_rst = '0' else
-	           to_signed(0, 32);
+  k_i_mul_temp <= to_signed(1099511628, 32) * error_out1;
+  k_i_out1 <= resize(k_i_mul_temp(63 DOWNTO 42), 32)  when integrator_rst = '0' else
+             to_signed(0, 32);
 
-  integrator1_process : PROCESS (clk)
+  integrator_process : PROCESS (clk)
   BEGIN
     if integrator_rst = '0' then
-        integrator1_out1 <= to_signed(0, 32);
+      integrator_out1 <= to_signed(0, 32);
     end if;
     IF rising_edge(clk) THEN
-      integrator1_out1 <= i_add_out1;
+      integrator_out1 <= i_add_out1;
     END IF;
-  END PROCESS integrator1_process;
-  
-  clamping_out1 <= to_signed(983040, 32) WHEN integrator1_out1 > to_signed(983040, 32) ELSE
-      to_signed(0, 32) WHEN integrator1_out1 < to_signed(0, 32) ELSE
-      integrator1_out1  when integrator_rst = '0' else
-	           to_signed(0, 32);
+  END PROCESS integrator_process;
 
-  i_add_out1 <= k_i_out1 + clamping_out1 when integrator_rst = '0' else to_signed(0, 32);
+
+  
+  clamping_out1 <= to_signed(983040, 32) WHEN integrator_out1 > to_signed(983040, 32) ELSE
+      to_signed(0, 32) WHEN integrator_out1 < to_signed(0, 32) ELSE
+      integrator_out1 when integrator_rst = '0' else
+             to_signed(0, 32); 
+
+  i_add_out1 <= k_i_out1 + clamping_out1  when integrator_rst = '0' else
+             to_signed(0, 32);
 
   pi_add_out1 <= k_p_out1 + i_add_out1;
 
+  
   saturation_out1 <= to_signed(983040, 32) WHEN pi_add_out1 > to_signed(983040, 32) ELSE
       to_signed(0, 32) WHEN pi_add_out1 < to_signed(0, 32) ELSE
-      pi_add_out1;
+      pi_add_out1 ;
 
   pi_out <= std_logic_vector(saturation_out1);
 

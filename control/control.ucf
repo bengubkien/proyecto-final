@@ -1,8 +1,13 @@
-NET "cs" LOC = "T12";
-NET "sdata_1" LOC = "V12";
-NET "sdata_2" LOC = "N10";
-NET "sclk" LOC = "P11";
+NET "scl" LOC = "N10";
+NET "sda" LOC = "P11";
+NET "scl_aux" LOC = "U11";
+NET "sda_aux" LOC = "V11";
 NET "clk" LOC = "V10";
+
+NET "scl" SLEW = FAST;
+NET "sda" SLEW = FAST;
+NET "scl" PULLUP;
+NET "sda" PULLUP;
 
 NET "d" LOC = "K2";
 NET "d_n" LOC = "K1";

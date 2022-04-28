@@ -8,13 +8,12 @@ entity control is
 		clk                                          : in std_logic;
 		pwm_rst, integrator_u_rst, integrator_i_rst  : in std_logic;
 		switch_i_ref                                 : in std_logic;
-		sdata_1, sdata_2                             : in std_logic;
+		scl, sda, scl_aux, sda_aux : inout std_logic;
 		btn_add, btn_sub, btn_next, btn_prev         : in std_logic;
 		anodes                                       : out std_logic_vector (3 downto 0);
 		cathodes                                     : out std_logic_vector(7 downto 0);
 		d                                            : out std_logic;
 		d_n                                          : out std_logic;
-		sclk, cs                                     : out std_logic;
 		neg_flag                                      : out std_logic
 	);
 end control;
@@ -56,19 +55,18 @@ architecture structural of control is
 	end component;
 
 	component adc_controller is
+		generic (
+		sys_clk_freq : integer := 100_000_000); --input clock speed from user logic in Hz
 		port (
-			clk      : in std_logic;
-			rst      : in std_logic;
-			sdata_1  : in std_logic;
-			sdata_2  : in std_logic;
-			start    : in std_logic;
-
-			sclk     : out std_logic;
-			cs       : out std_logic;
-			data_1   : out std_logic_vector(11 downto 0);
-			data_2   : out std_logic_vector(11 downto 0);
-			done     : out std_logic
-		);
+			clk : in STD_LOGIC; --system clock
+			reset_n : in STD_LOGIC; --asynchronous active-low reset
+			scl : inout STD_LOGIC; --I2C serial clock
+			sda : inout STD_LOGIC; --I2C serial data
+			i2c_ack_err : out STD_LOGIC; --I2C slave acknowledge error flag
+			adc_ch0_data : out STD_LOGIC_VECTOR(11 downto 0); --ADC Channel 0 data obtained
+			adc_ch1_data : out STD_LOGIC_VECTOR(11 downto 0); --ADC Channel 1 data obtained
+			adc_ch2_data : out STD_LOGIC_VECTOR(11 downto 0); --ADC Channel 2 data obtained
+		adc_ch3_data : out STD_LOGIC_VECTOR(11 downto 0)); --ADC Channel 3 data obtained
 	end component;
 
 	component pwm_controller is
@@ -170,16 +168,15 @@ begin
 
 	adc : adc_controller
 	port map(
-		clk      => clk, 
-		rst      => '0', 
-		sdata_1  => sdata_1, 
-		sdata_2  => sdata_2, 
-		sclk     => sclk, 
-		cs       => cs, 
-		data_1   => data_1, -- Tensión
-		data_2   => data_2, -- Corriente
-		start    => clk_sample, 
-		done     => open
+		clk => clk,
+		reset_n => '1', 
+		scl => scl, 
+		sda => sda, 
+		i2c_ack_err => open, 
+		adc_ch0_data => data_1, 
+		adc_ch1_data => data_2, 
+		adc_ch2_data => open, 
+		adc_ch3_data => open
 	);
 
 	fir_corriente : filtro_corriente
@@ -266,4 +263,6 @@ begin
 
 	d <= pwm_out;
 	d_n <= pwm_n_out;
+	scl_aux <= 'Z';
+	sda_aux <= 'Z';
 end architecture;
