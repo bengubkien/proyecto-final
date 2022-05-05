@@ -6,9 +6,10 @@ use ieee.std_logic_arith.all;
 entity control is
 	port (
 		clk                                          : in std_logic;
-		pwm_rst, integrator_u_rst, integrator_i_rst  : in std_logic;
+		pwm_rst, integrator_u_rst, integrator_i_rst, adc_rst  : in std_logic;
 		switch_i_ref                                 : in std_logic;
 		sdata_1, sdata_2                             : in std_logic;
+		sda, scl									: inout std_logic;
 		btn_add, btn_sub, btn_next, btn_prev         : in std_logic;
 		anodes                                       : out std_logic_vector (3 downto 0);
 		cathodes                                     : out std_logic_vector(7 downto 0);
@@ -21,9 +22,10 @@ end control;
 
 architecture structural of control is
 
-	signal clk_sample : std_logic;
+	signal clk_ad1 : std_logic;
+	signal clk_ad2 : std_logic;
 
-	signal data_1 : std_logic_vector (11 downto 0);
+	signal data_1 : std_logic_vector (15 downto 0);
 	signal data_2 : std_logic_vector (11 downto 0);
 
 	signal data_2_filtered : std_logic_vector (11 downto 0);
@@ -49,13 +51,14 @@ architecture structural of control is
 	signal pwm_n_out : std_logic;
 
 	component clock_divider is
+		generic(div    : in          integer);
 		port (
 			clk      : in std_logic;
 			clk_div  : out std_logic
 		);
 	end component;
 
-	component adc_controller is
+	component ad1_controller is
 		port (
 			clk      : in std_logic;
 			rst      : in std_logic;
@@ -70,6 +73,17 @@ architecture structural of control is
 			done     : out std_logic
 		);
 	end component;
+
+	component pmodAD2_ctrl is
+		generic(pmod_config : in          std_logic_vector(7 downto 0));
+    Port ( 
+	 mainClk	: in		STD_LOGIC;
+           SDA_mst	: inout	STD_LOGIC;
+			  test : out std_logic;
+           SCL_mst	: inout	STD_LOGIC;
+           wData0		: out		STD_LOGIC_VECTOR (15 downto 0);
+           rst			: in		STD_LOGIC);
+end component;
 
 	component pwm_controller is
 		port (
@@ -162,13 +176,25 @@ architecture structural of control is
 	end component;
 
 begin
-	clk_sample_divider : clock_divider
+	clk_div_ad1 : clock_divider
+	generic map(
+		div => 80
+	)
 	port map(
 		clk      => clk, 
-		clk_div  => clk_sample
+		clk_div  => clk_ad1
 	);
 
-	adc : adc_controller
+	clk_div_ad2 : clock_divider
+	generic map(
+		div => 930
+	)
+	port map(
+		clk      => clk, 
+		clk_div  => clk_ad2
+	);
+
+	ad1 : ad1_controller
 	port map(
 		clk      => clk, 
 		rst      => '0', 
@@ -176,15 +202,26 @@ begin
 		sdata_2  => sdata_2, 
 		sclk     => sclk, 
 		cs       => cs, 
-		data_1   => data_1, -- Tensión
+		data_1   => open, -- Tensión
 		data_2   => data_2, -- Corriente
-		start    => clk_sample, 
+		start    => clk_ad1, 
 		done     => open
 	);
 
+	ad2 : pmodAD2_ctrl
+	generic map(pmod_config => "00010000")
+	port map(
+	
+	mainClk => clk,
+		SDA_mst => sda,
+		SCL_mst => scl,
+		wData0 => data_1,
+		rst => adc_rst
+		);
+
 	fir_corriente : filtro_corriente
 	port map(
-		clk                   => clk_sample, 
+		clk                   => clk_ad2, 
 		filtro_corriente_in   => data_2, 
 		filtro_corriente_out  => data_2_filtered
 	);
@@ -201,7 +238,7 @@ begin
 
 	conv_tension : conversion_tension
 	port map(
-		conv_u_in      => data_1, 
+		conv_u_in      => data_1(11 downto 0), 
 		conv_ref_in    => ref_u, 
 		conv_u_out     => tension_pi, 
 		conv_u_disp    => tension_display, 
@@ -220,7 +257,7 @@ begin
  
 	pi_u : pi_tension
 	port map(
-		clk             => clk_sample, 
+		clk             => clk_ad2, 
 		integrator_rst  => integrator_u_rst, 
 		ref_in          => ref_u, 
 		tension_in      => tension_pi, 
@@ -229,7 +266,7 @@ begin
 
 	pi_i : pi_corriente
 	port map(
-		clk             => clk_sample, 
+		clk             => clk_ad2, 
 		integrator_rst  => integrator_i_rst, 
 		switch_i_ref    => switch_i_ref, 
 		ref_in_pi_u     => pi_u_out, 

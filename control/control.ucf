@@ -4,12 +4,19 @@ NET "sdata_2" LOC = "N10";
 NET "sclk" LOC = "P11";
 NET "clk" LOC = "V10";
 
-NET "d" LOC = "K2";
-NET "d_n" LOC = "K1";
+NET "scl" LOC = "L4";
+NET "sda" LOC = "L3";
+
+
+
+NET "d" LOC = "H3";
+NET "d_n" LOC = "L7";
+
 NET "pwm_rst" LOC = "T5";
 NET "integrator_u_rst" LOC = "V8";
 NET "integrator_i_rst" LOC = "U8";
 NET "switch_i_ref" LOC = "N8";
+NET "adc_rst" LOC = "M8";
 
 
 NET "anodes<0>" LOC = "N16";

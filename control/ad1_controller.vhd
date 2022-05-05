@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-entity adc_controller is
+entity ad1_controller is
 	port (
 		clk : in std_logic; 
 		rst : in std_logic;
@@ -19,9 +19,9 @@ entity adc_controller is
 		done : out std_logic 
 	);
  
-end adc_controller;
+end ad1_controller;
 
-architecture behavioral of adc_controller is
+architecture behavioral of ad1_controller is
 
 	--------------------------------------------------------------------------------
 	-- SEALES
