@@ -1,0 +1,4 @@
+2;16;ASC;RP;MSB;10000;"Ch1, DC coupling, 1.0E0 A/div, 4.0E-4 s/div, 10000 points, Sample mode";Y;4.0E-7;0;-4.2E-4;"s";1.5625E-4;0.0E0;-6.4E3;"A"
+
+
+8 div vertical, 10 div horizonal
