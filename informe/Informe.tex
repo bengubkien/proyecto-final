@@ -1,0 +1,75 @@
+\documentclass{report}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{array}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{afterpage}
+\usepackage{fix-cm}
+\usepackage{subfig} 
+\usepackage{lipsum}
+\usepackage{sectsty}
+\usepackage{amsmath}
+\usepackage{svg}
+\usepackage[final, hidelinks]{hyperref}
+\usepackage[default,scale=0.95]{opensans}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{wrapfig}
+\usepackage{fancyhdr}
+\usepackage{makecell}
+\usepackage{biblatex}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\rightmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\definecolor{UNLPVerde}{HTML}{00575f}
+
+\chapterfont{\color{UNLPVerde}}
+\sectionfont{\color{UNLPVerde}}
+\subsectionfont{\color{UNLPVerde}}
+
+\renewcommand{\chaptername}{Capítulo}
+\renewcommand{\contentsname}{Contenido}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Tabla}
+
+\addbibresource{Referencias.bib}
+
+\begin{document}
+
+\nocite{*}
+
+\sisetup{detect-all}
+
+\input{Secciones y capítulos/Título.tex}
+
+\input{Secciones y capítulos/Resumen y abstract.tex}
+
+\tableofcontents
+
+\input{Secciones y capítulos/Introducción.tex}
+
+\input{Secciones y capítulos/Sistemas de almacenamiento.tex}
+
+\input{Secciones y capítulos/Convertidores CC-CC.tex}
+
+\input{Secciones y capítulos/Field-programmable gate arrays.tex}
+
+\input{Secciones y capítulos/Diseño de la etapa de control.tex}
+
+\input{Secciones y capítulos/Implementación de la etapa de control.tex}
+
+\input{Secciones y capítulos/Ensayos y resultados experimentales.tex}
+
+\pagebreak
+
+\printbibliography[heading=bibintoc, title={Referencias}]
+
+\end{document}

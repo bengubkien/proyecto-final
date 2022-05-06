@@ -1,0 +1,153 @@
+\chapter{Implementación de la etapa de control}
+\label{implementacion-control}
+
+\section{Introducción}
+
+En este capítulo se sintetiza e implementa la estrategia de control diseñada en el capítulo anterior. Debido a las características del lenguaje de programación a utilizar, los componentes del lazo de control deben ser programado individualmente, para después ser ensamblados en el sistema de control diseñado. Debido a esta propiedad de VHDL, además de la programación de cada componente, se realiza una simulación o \emph{test bench} para corroborar su correcto funcionamiento. Las herramientas utilizadas aquí fueron el entorno de desarrollo Xilinx ISE y los simuladores de código HDL ISim y ModelSim, los cuales fueron descritos en el Capítulo \ref{cap-fpga} Sección \ref{desarrollo-fpga}.
+
+\section{Placa de desarrollo a utilizar}
+
+\begin{wrapfigure}{r}{0.42\textwidth}
+    \vspace{-10pt}
+    \begin{center}
+      \includegraphics[width=0.41\textwidth]{Imágenes/Nexys 3.png}
+    \end{center}
+    \caption{Placa de desarrollo Nexys 3.}
+    \label{nexys3}
+  \end{wrapfigure}
+
+En el Capítulo \ref{cap-fpga}, Sección \ref{subseccion-nexys-3}, fue presentada la placa de desarrollo Nexys 3, la cual posee un FPGA Spartan-6. Esta placa es la utilizada para implementar el algoritmo de control que se detallará a lo largo de este capítulo, debido a su gran cantidad de recursos lógicos y amplia cantidad de elementos I/O (botones, switches, LEDs, etc.).
+
+Esta placa presenta slices específicamente diseñados para aplicaciones de procesamiento de señales (\mbox{\emph{DSP slices}}), los que permiten un cálculo de punto fijo con gran resolución, funcionalidad necesaria para sintetizar los controladores y filtros mostrados en esta sección, y tener la seguridad de que los límites de la placa no son excedidos.
+
+Para la programación de la Nexys 3 es necesario utilizar el entorno de desarrollo de Xilinx, el cual posee varias herramientas que permitirán verificar el correcto funcionamiento de cada modelo programado y visualizar el interconexionado de cada bloque que conforma el sistema de control implementado. 
+
+\section{Conversor analógico-digital}
+
+La primer pieza del lazo de control programada fue el controlador de los conversores analógico-digitales. Previo a esta tarea fue necesario comprender el protocolo de comunicación del \emph{Pmod AD1}, el cual está compuesto por dos ADC \emph{AD7476A}. El protocolo utilizado por estos conversores es \emph{SPI-like} con una señal de \emph{Chip Select} ($\overline{\mbox{CS}}$), con la única diferencia de que ambas líneas de datos (\emph{MOSI} y \emph{MISO}) son diseñadas para operar únicamente como salidas, y por lo tanto ambas son definidas como líneas de datos \emph{Master-In-Slave-Out}.
+
+Los ADCs poseen una resolución de 12 bits, con una frecuencia de muestreo máxima de 1MS/s y un filtro antialiasing \cite{ad7476a}. Ambos conversores transforman una señal que va de 0 a $\mathrm{V_{DD}}$, en un valor digital con un rango de 0 a 4095. En la Figura \ref{diagramas-adc} pueden observarse los diagramas circuitales del Pmod AD1 y de los AD7476A.
+
+\begin{figure}[hbt!]
+    \centering
+    \subfloat[Pmod AD1.]{\includegraphics[width=0.3\textwidth]{Imágenes/Conversor analógico-digital/Pmod AD1.pdf}}    
+    \hspace{10mm}
+    \subfloat[AD7476A.]{\includegraphics[width=0.27\textwidth]{Imágenes/Conversor analógico-digital/AD7476A.pdf}}
+    \caption{Diagramas de los circuitos del Pmod y ADC.}
+    \label{diagramas-adc}
+\end{figure}
+
+El principio de funcionamiento de los conversores consta del $\overline{\mbox{CS}}$ y un reloj en serie SCLK. Cuando se produce un flanco en SCLK y $\overline{\mbox{CS}}$ está bajo, los conversores empiezan a muestrear. En total, cada ADC produce 16 bits, en donde los cuatro primeros bits son cero, y los restante 12 bits son la muestra con el bit más significativo primero. En la Figura \ref{adc-timing} se observa el diagrama de tiempos del conversor.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Conversor analógico-digital/Diagrama de tiempos del AD7476A.pdf}
+    \caption{Diagrama de tiempos del AD7476A.}
+    \label{adc-timing}
+\end{figure} 
+
+Para poder utilizar ambos conversores se implementó un controlador en VHDL a partir de una máquina de tres estados:
+
+\begin{enumerate}
+    \item En el estado \texttt{shift} se captan las muestras de ambos ADCs y se los almacena en registros auxiliares de 16 bits.
+    \item En el estado \texttt{sync} se copian los 12 bits de ambas muestras a los puertos de salida correspondientes de cada conversor.
+    \item Por último, en el estado \texttt{idle} el controlador permanece inactivo, lo cual es necesario entre conversiones.
+\end{enumerate}
+
+En la Figura \ref{adc-controller} puede observarse el \emph{test bench} realizado para el controlador con el software ModelSim.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Conversor analógico-digital/Test bench.pdf}
+    \caption{Simulación realizada del controlador de los conversores.}
+    \label{adc-controller}
+\end{figure} 
+
+En esta simulación, \texttt{start} se pone en alto, y cuando el controlador recibe un flanco ascendente de \texttt{sclk}, \texttt{cs} se pone en bajo. Esto significa que la conversión comienza a efectuarse. Luego de iniciar el muestreo, se reciben en los siguientes ocho flancos ascendentes del reloj todos ceros en \texttt{sdata\_1}, y luego el patrón que puede observarse (un uno, un cero, otro uno, un cero más, y luego todos unos, en ese orden). Finalmente después de 16 ciclos de \texttt{sclk} los datos se sincronizan a través de la máquina de estados en un vector de 12 bits llamado \texttt{data\_1} en el cual se descartan los primeros 4 ceros.
+
+En este controlador, \texttt{sclk} es un reloj de frecuencia \SI{12.5}{\mega\hertz}, mientras que la frecuencia de muestreo (lo que sería \texttt{start}) es de \SI{625}{\kilo\hertz}. 
+
+\section{Filtro digital}
+
+Una vez muestreada la corriente, es importante que el lazo interno de corriente reciba un valor medio para que su dinámica resulte suave y no se produzcan exabruptos que pueden poner en peligro al sistema. Por lo tanto, un filtro es diseñado para atenuar el \emph{ripple} de la corriente, resultado de la conmutación de las llaves del convertidor como fue mencionado en capítulos anteriores y puede observarse en la Figura \ref{formas-onda-elevador}b. Por eso mismo, se implementa un filtro pasabajos digital de primer orden, con frecuencia de corte $f_c$ de 1.5kHz. La razón de esta elección fue mencionada en el Capítulo \ref{diseno-control}, Sección \ref{diseno-filtro-corriente}. La Ecuación \ref{filtro-corriente-discretizado} representa a la transferencia discreta del filtro a implementar. Desarrollando la función de transferencia:
+
+\begin{equation*}
+    z \, Y(z) - 0.98492 \, Y(z) = 0.0150796 \, X(z)
+\end{equation*}
+
+Y antitransformando:
+
+\begin{equation}
+    y[n+1] - 0.98492 \, y[n] = 0.0150796 \, x[n]
+    \label{filtro-anticausal}
+\end{equation}
+
+Esta ecuación en diferencias es \emph{anticausal}, es decir, el término $y[n+1]$ representa una muestra de la salida en un tiempo futuro, lo cual físicamente no es posible de sintetizar. Por lo tanto, para implementar la Ecuación \ref{filtro-anticausal} es necesario aplicar un retardo unitario al sistema. Implementando el retardo y reordenardo, la expresión final es la siguiente:
+
+\begin{equation}
+    \boxed{y[n] = 0.0150796 \, x[n-1] + 0.98492 \, y[n-1]}
+\end{equation}
+
+La implementación del filtro puede ser optimizada para que se utilice un único \emph{delay} para ambas entrada y salida. Su síntesis en Simulink\textsuperscript\textregistered \hspace{0.6pt} puede observarse en la Figura \ref{estructura-filtro}.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Filtro digital/Estructura en Simulink.pdf}    
+    \caption{Implementación del filtro en Simulink\textsuperscript\textregistered.}
+    \label{estructura-filtro}
+\end{figure}
+
+Con $k_o = 0.0150796$ y $k_1 = 0.98492$. Debido a la resolución necesaria para representar estos coeficientes, se eligió una síntesis a código HDL con representación en punto fijo de 32 bits de longitud de palabra, con 16 bits para representar la fracción.
+
+Generado el código de VHDL, se realiza nuevamente otro \emph{test bench} para probar su funcionamiento. Para esta simulación se inyecta una onda triangular con amplitud unitaria de 20kHz montada sobre una señal continua de valor 1, de forma de emular el comportamiento de la corriente del convertidor. El resultado puede verse en la Figura \ref{simulacion-filtro}, en el cual se observa un transitorio y luego el correcto filtrado del \emph{ripple} de la entrada.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Filtro digital/Simulación en ModelSim.pdf}    
+    \caption{Simulación realizada del controlador de los conversores.}
+    \label{simulacion-filtro}
+\end{figure} 
+
+\section{Controlador proporcional-integral}
+\label{implementacion-pid}
+
+La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered \hspace{0.6pt} es el de la Figura \ref{estructura-pi}. El bloque de saturación antes de la salida fue agregado para implementar el sistema de \emph{anti-windup}. El tipo de datos para la representación de los parámetros diseñados fue de punto fijo de 32 bits de longitud de palabra, con 16 bits para la fracción. El método de anti-windup elegido, llamado \emph{clamping} (y explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}), se programó en VHDL, implementando un registro que guarde valores en la entrada del delay antes de que se detecte la saturación de la salida del controlador. Si se detecta la saturación, el retardo empieza a alimentarse con el valor del registro hasta que la salida no se encuentre saturada.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.70\columnwidth]{Imágenes/Controlador proporcional-integral/Estructura en Simulink.pdf}    
+    \caption{Implementación del controlador PI en Simulink\textsuperscript\textregistered.}
+    \label{estructura-pi}
+\end{figure}
+
+Como los mecanismos de ambos controladores PI son iguales, se programa una única simulación. El \emph{test bench} realizado para los controladores proporcional-integral consiste en la prueba del correcto funcionamiento del clamping, utilizando un estímulo constante de valor unitario positivo hasta el valor fijado (240 en entero o 0F0 en hexadecimal), seguido de un breve período sin excitación, y finalmente una excitación con un valor entero negativo para observar como llega a cero. Tal simulación se muestra en la Figura \ref{simulacion-pi}. Se observa el correcto funcionamiento del controlador en las tres etapas, ya que una entrada constante se traduce a una rampa gracias al integrador, luego se observa la saturación debido al clamping y su mantenimiento a través de la excitación nula, y por último su rampa con pendiente negativa hasta el cero debido a una señal de error negativa.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Controlador proporcional-integral/Simulacion en ModelSim.pdf}    
+    \caption{Simulación realizada del controlador proporcional-integral.}
+    \label{simulacion-pi}
+\end{figure} 
+
+\section{Controlador PWM}
+
+El generador de la onda modulada por ancho de pulsos hace de vínculo entre la acción de control y el convertidor. Este bloque recibe como entrada un ciclo de trabajo provisto por el controlador proporcional-integral, y comparándolo con un contador, lo transforma en una señal de ancho de pulso modulado (PWM). Este bloque posee como salidas la señal PWM y su complemento para accionar ambas llaves del convertidor.
+
+El controlador fue programado completamente en VHDL y recibe un ciclo de trabajo con resolución de 12 bits (al igual que la resolución de las muestras de los conversores analógico-digitales), generando una onda PWM correspondiente con una frecuencia de 20kHz a partir de un contador y un comparador. En la Figura \ref{simulacion-pwm} se ingresa al controlador con el valor decimal 2047, que genera una onda de ancho de pulso modulado con un ciclo de trabajo del 50\%, y también se puede corroborar que su período es de \SI{50}{\micro\second}.
+
+Para este componente también fue implementado un \emph{reset} asincrónico que pone en cero a \texttt{pwm\_out} y en uno a su complemento por cuestiones de seguridad.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.85\columnwidth]{Imágenes/Controlador PWM/Simulación en ModelSim.pdf}    
+    \caption{Simulación realizada del controlador PWM.}
+    \label{simulacion-pwm}
+\end{figure} 
+
+\section{Construcción del lazo de control}
+
+Una vez programados todos los componentes se realiza la interconexión entre ellos. Esto es logrado a través de la instanciación de cada modelo, concepto detallado en el Capítulo \ref{cap-fpga}. El modelo resultante, al tratarse solamente de la vinculación entre cada componente, posee una arquitectura estructural, como fue explicado en la Sección \ref{vhdl-estruct}.
+
+Con el lazo de control armado con todos sus componentes y sintetizado en Xilinx ISE, se observa su diagrama RTL confeccionado por el entorno de desarrollo en la Figura X.
+
+\newpage
