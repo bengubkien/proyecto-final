@@ -20,7 +20,7 @@ plt.ylabel('Corriente [A]')
 plt.xlabel('Tiempo [ms]')
 plt.grid(True, ls="-", linewidth=0.4)
 
-plt.savefig('Escalóno positivo de corriente.pdf')
+plt.savefig('Escalón positivo de corriente.pdf')
 
 # Escalón negativo de corriente
 plt.figure('Escalón negativo de corriente')
@@ -30,4 +30,4 @@ plt.ylabel('Corriente [A]')
 plt.xlabel('Tiempo [ms]')
 plt.grid(True, ls="-", linewidth=0.4)
 
-plt.savefig('Escalóno negativo de corriente.pdf')
+plt.savefig('Escalón negativo de corriente.pdf')
