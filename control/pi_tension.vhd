@@ -50,7 +50,6 @@ BEGIN
     END IF;
   END PROCESS integrator_process;
 
-
   
   clamping_out1 <= to_signed(983040, 32) WHEN integrator_out1 > to_signed(983040, 32) ELSE
       to_signed(0, 32) WHEN integrator_out1 < to_signed(0, 32) ELSE
