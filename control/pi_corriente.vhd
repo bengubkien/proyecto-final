@@ -36,36 +36,14 @@ begin
 	corriente_in_signed <= signed(corriente_in);
 
 	error <= ref_in_signed - corriente_in_signed;
-
---	k_p_mul_temp <= to_signed(1374053990, 32) * error;
---	k_p_out <= k_p_mul_temp(56 downto 25);
 	
-	k_p_mul_temp <= to_signed(1717567488, 32) * error;			-- k_p = 0.05
-	k_p_out <= k_p_mul_temp(54 DOWNTO 23);
+	k_p_mul_temp <= to_signed(2061080986, 32) * error;			-- k_p = 0.03
+	k_p_out <= k_p_mul_temp(55 DOWNTO 24);
 
---	k_p_mul_temp <= to_signed(1288175616, 32) * error;			-- k_p = 0.075
---	k_p_out <= k_p_mul_temp(53 DOWNTO 22);
-
---	k_i_mul_temp <= to_signed(1407031286, 32) * error;
---	k_i_out <= resize(k_i_mul_temp(63 DOWNTO 33), 32) when integrator_rst = '0' else
---	           to_signed(0, 32);
-
-	k_i_mul_temp <= to_signed(1407031286, 32) * error;
+	k_i_mul_temp <= to_signed(1125625029, 32) * error;			-- k_i = 40
 	k_i_out <= k_i_mul_temp(63 DOWNTO 32) when integrator_rst = '0' else
-				  to_signed(0, 32);
---				  
--- k_i_mul_temp <= to_signed(1407031286, 32) * error;
---	k_i_out <= k_i_mul_temp(62 DOWNTO 31) when integrator_rst = '0' else
---				  to_signed(0, 32);
+				  to_signed(0, 32);			  
 
-	
---  k_p_mul_temp <= to_signed(1717567488, 32) * error;
---  k_p_out <= k_p_mul_temp(53 DOWNTO 22);
---
---  k_i_mul_temp <= to_signed(2110546929, 32) * error;
---  k_i_out <= k_i_mul_temp(63 DOWNTO 32) when integrator_rst = '0' else
---				  to_signed(0, 32);
-			
 	integrator_process : process (clk)
 	begin
 		if integrator_rst = '0' then

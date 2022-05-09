@@ -1,22 +1,29 @@
-NET "cs" LOC = "T12";
-NET "sdata_1" LOC = "V12";
-NET "sdata_2" LOC = "N10";
-NET "sclk" LOC = "P11";
+# Reloj del sistema
 NET "clk" LOC = "V10";
 
+# Pines del Pmod AD1
+NET "sdata_1" LOC = "V12";
+NET "sdata_2" LOC = "N10";
+NET "cs" LOC = "T12";
+NET "sclk" LOC = "P11";
+
+# Salidas del PWM
 NET "d" LOC = "K2";
 NET "d_n" LOC = "K1";
+
+# Resets
 NET "pwm_rst" LOC = "T5";
 NET "integrator_u_rst" LOC = "V8";
 NET "integrator_i_rst" LOC = "U8";
 NET "switch_i_ref" LOC = "N8";
 
-
+# Ánodos del display
 NET "anodes<0>" LOC = "N16";
 NET "anodes<1>" LOC = "N15";
 NET "anodes<2>" LOC = "P18";
 NET "anodes<3>" LOC = "P17";
 
+# Cátodos del display
 NET "cathodes<0>" LOC = "T17";
 NET "cathodes<1>" LOC = "T18";
 NET "cathodes<2>" LOC = "U17";
@@ -26,9 +33,11 @@ NET "cathodes<5>" LOC = "N14";
 NET "cathodes<6>" LOC = "L14";
 NET "cathodes<7>" LOC = "M13";
 
+# Botones
 NET "btn_add" LOC = "A8";
 NET "btn_sub" LOC = "C9";
 NET "btn_next" LOC = "D9";
 NET "btn_prev" LOC = "C4";
 
+# Flag de corriente negativa
 NET "neg_flag" LOC = "U16";

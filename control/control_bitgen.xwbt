@@ -1,8 +1,8 @@
 INTSTYLE=ise
-INFILE=/home/control/control.ncd
-OUTFILE=/home/control/control.bit
+INFILE=/home/bengubkien/control/control.ncd
+OUTFILE=/home/bengubkien/control/control.bit
 FAMILY=Spartan6
 PART=xc6slx16-2csg324
-WORKINGDIR=/home/control
+WORKINGDIR=/home/bengubkien/control
 LICENSE=WebPack
 USER_INFO=212374143_0_0_433

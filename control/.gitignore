@@ -5,7 +5,6 @@
 ### XilinxISE ###
 # intermediate build files
 *.bgn
-*.bit
 *.bld
 *.cmd_log
 *.drc
@@ -31,6 +30,8 @@
 *.unroutes
 *.ut
 *.xpi
+*.ncd
+*.xwbt
 *.xst
 *_bitgen.xwbt
 *_envsettings.html
