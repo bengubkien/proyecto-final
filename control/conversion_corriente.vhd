@@ -1,72 +1,63 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
+USE IEEE.numeric_std.ALL;
 
-entity conversion_corriente is
-	port (
-		conv_i_in      : in std_logic_vector(11 downto 0);
-		conv_ref_in    : in std_logic_vector(31 downto 0);
-		conv_i_out     : out std_logic_vector(31 downto 0);
-		conv_i_disp    : out std_logic_vector(15 downto 0);
-		conv_ref_disp  : out std_logic_vector(15 downto 0);
-		neg_flag       : out std_logic
-	);
-end conversion_corriente;
+ENTITY conversion_corriente IS
+  PORT( conv_i_in                         :   IN    std_logic_vector(11 DOWNTO 0);
+        conv_ref_in                       :   IN    std_logic_vector(31 DOWNTO 0);
+        conv_i_out                        :   OUT   std_logic_vector(31 DOWNTO 0);
+        conv_i_disp                       :   OUT   std_logic_vector(15 DOWNTO 0);
+        conv_ref_disp                     :   OUT   std_logic_vector(15 DOWNTO 0);
+neg_flag       : out std_logic
+        );
+END conversion_corriente;
 
-architecture behavioral of conversion_corriente is
 
-	signal conv_i_in_unsigned : unsigned(15 downto 0);
-	signal to_fixd_out1 : signed(31 downto 0);
-	signal b_mul_temp : signed(63 downto 0);
-	signal b_out1 : signed(31 downto 0);
-	signal add_add_cast : signed(34 downto 0);
-	signal add_add_temp : signed(35 downto 0);
-	signal add_cast : signed(34 downto 0);
-	signal add_out1 : signed(31 downto 0);
-	signal scale_i_mul_temp : signed(63 downto 0);
-	signal scale_i_out1 : signed(31 downto 0);
-	signal to_uint16_out1 : unsigned(15 downto 0);
-	signal conv_ref_in_signed : signed(31 downto 0);
-	signal scale_ref_mul_temp : signed(63 downto 0);
-	signal scale_ref_out1 : unsigned(15 downto 0);
- 
-begin
-	conv_i_in_unsigned <= resize(unsigned(conv_i_in), 16);
+ARCHITECTURE rtl OF conversion_corriente IS
 
-	to_fixd_out1 <= signed(conv_i_in_unsigned & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0');
+     SIGNAL conv_i_in_unsigned               : unsigned(11 DOWNTO 0);
+  SIGNAL to_fixd_out1                     : signed(31 DOWNTO 0);
+  SIGNAL b_mul_temp                       : signed(63 DOWNTO 0);
+  SIGNAL b_out1                           : signed(31 DOWNTO 0);
+  SIGNAL add_1                            : signed(34 DOWNTO 0);
+  SIGNAL add_out1                         : signed(31 DOWNTO 0);
+  SIGNAL scale_i_mul_temp                 : signed(63 DOWNTO 0);
+  SIGNAL scale_i_out1                     : signed(31 DOWNTO 0);
+  SIGNAL to_uint16_out1                   : unsigned(15 DOWNTO 0);
+  SIGNAL conv_ref_in_signed               : signed(31 DOWNTO 0);
+  SIGNAL scale_ref_mul_temp               : signed(63 DOWNTO 0);
+  SIGNAL scale_ref_out1                   : unsigned(15 DOWNTO 0);
 
-	b_mul_temp <= to_signed( - 1438771739, 32) * to_fixd_out1;
-	b_out1 <= b_mul_temp(61 downto 30);
+BEGIN
+  conv_i_in_unsigned <= unsigned(conv_i_in);
 
-	add_add_cast <= resize(b_out1 & '0' & '0', 35);
-	add_add_temp <= (resize(add_add_cast, 36)) + to_signed(1147347742, 36);
+  to_fixd_out1 <= signed(resize(conv_i_in_unsigned & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0' & '0', 32));
 
-	add_cast <= "01111111111111111111111111111111111" when (add_add_temp(35) = '0') and (add_add_temp(34) /= '0') else
-	            "10000000000000000000000000000000000" when (add_add_temp(35) = '1') and (add_add_temp(34) /= '1') else
-	            add_add_temp(34 downto 0);
+  b_mul_temp <= to_signed(-1686096035, 32) * to_fixd_out1;
+  b_out1 <= b_mul_temp(61 DOWNTO 30);
 
-	add_out1 <= X"7FFFFFFF" when (add_cast(34) = '0') and (add_cast(33) /= '0') else
-	            X"80000000" when (add_cast(34) = '1') and (add_cast(33) /= '1') else
-	            add_cast(33 downto 2);
+  add_1 <= to_signed(1146986981, 35);
+  add_out1 <= b_out1 + add_1(33 DOWNTO 2);
 
-	scale_i_mul_temp <= to_signed(1374389535, 32) * add_out1;
-	scale_i_out1 <= resize(scale_i_mul_temp(63 downto 37), 32);
+  scale_i_mul_temp <= to_signed(1374389535, 32) * add_out1;
+  scale_i_out1 <= resize(scale_i_mul_temp(63 DOWNTO 37), 32);
 
-	conv_i_out <= std_logic_vector(scale_i_out1);
+  conv_i_out <= std_logic_vector(scale_i_out1);
 
-	-- Si el número es negativo, lo invierto y activo un flag.
+  -- Si el número es negativo, lo invierto y activo un flag.
 	to_uint16_out1 <= unsigned(add_out1(31 downto 16)) when add_out1(31) = '0' else
 	                  resize(unsigned(add_out1(31 downto 16) * to_signed( - 1, 16)), 16);
- 
-	neg_flag <= '0' when add_out1(31) = '0' else '1';
 
-	conv_i_disp <= std_logic_vector(to_uint16_out1);
+neg_flag <= '0' when add_out1(31) = '0' else '1';
 
-	conv_ref_in_signed <= signed(conv_ref_in);
+  conv_i_disp <= std_logic_vector(to_uint16_out1);
 
-	scale_ref_mul_temp <= to_signed(1677721600, 32) * conv_ref_in_signed;
-	scale_ref_out1 <= unsigned(scale_ref_mul_temp(55 downto 40));
+  conv_ref_in_signed <= signed(conv_ref_in);
 
-	conv_ref_disp <= std_logic_vector(scale_ref_out1);
+  scale_ref_mul_temp <= to_signed(1677721600, 32) * conv_ref_in_signed;
+  scale_ref_out1 <= unsigned(scale_ref_mul_temp(55 DOWNTO 40));
 
-end behavioral;
+  conv_ref_disp <= std_logic_vector(scale_ref_out1);
+
+END rtl;
+
