@@ -19,7 +19,7 @@ begin
 	begin
 		if rising_edge(clk) then -- 100MHz/2/80 = 625kHz
 			clk_cnt <= clk_cnt + 1;
-			if (clk_cnt) = 625 then
+			if (clk_cnt) = 80 then
 				clk_div_sgn <= not clk_div_sgn;
 				clk_cnt <= + 1;
 			end if;
