@@ -24,13 +24,13 @@ end adc_controller;
 architecture behavioral of adc_controller is
 
 	--------------------------------------------------------------------------------
-	-- SEALES
+	-- SEÑALES
 	--
-	-- Las siguientes seales son utilizadas:
+	-- Las siguientes señales son utilizadas:
 	--
-	-- current_state: Estado actual de la mquina de estados del controlador
+	-- current_state: Estado actual de la máquina de estados del controlador
 	--
-	-- next_state : Siguiente estado de la mquina de estados del controlador
+	-- next_state : Siguiente estado de la máquina de estados del controlador
 	--
 	-- aux_1 : Vector auxiliar que almacena los 16 bits provenientes del primer ADC del Pmod
 	--
@@ -46,9 +46,9 @@ architecture behavioral of adc_controller is
 	--
 	-- shift_cnt : Contador utilizado para shiftear los bits de los ADC a "aux_1" y "aux_2"
 	--
-	-- en_shift_cnt : Seal utilizada como enable para shiftear los bits de los ADC a "aux_1" y "aux_2".
+	-- en_shift_cnt : Señal utilizada como enable para shiftear los bits de los ADC a "aux_1" y "aux_2"
 	--
-	-- en_load : Seal utilizada como enable para cargar los 12 bits de datos a "data_1" y "data_2"
+	-- en_load : Señal utilizada como enable para cargar los 12 bits de datos a "data_1" y "data_2"
 	--------------------------------------------------------------------------------
 
 	type states is (idle, 
@@ -93,7 +93,7 @@ begin
 
 	--------------------------------------------------------------------------------
 	-- REG_SHIFT_PROC
- 
+
 	-- Debido a que cada ADC produce 16 bits, en donde los cuatro MSB son ceros
 	-- y los otros 12 bits son los datos, se almacenan todos los bits temporalmente
 	-- en "aux_1" y "aux_2" cuando "en_shift_cnt" est activo.
@@ -102,7 +102,7 @@ begin
 	-- "shift_cnt" es un contador de 4 bits utilizado para shiftear 16 veces (una
 	-- vez por cada ciclo de reloj) a los registros auxiliares.
 	--------------------------------------------------------------------------------
- 
+
 	reg_shift_proc : process (clk_div, en_load, en_shift_cnt)
 	begin
 		if rising_edge(clk_div) then
@@ -111,17 +111,17 @@ begin
 				aux_2 <= aux_2(14 downto 0) & sdata_2;
 				shift_cnt <= shift_cnt + '1';
 			elsif (en_load = '1') then
-				test_sgn <= not test_sgn; 
+				test_sgn <= not test_sgn;
 				shift_cnt <= "0000"; -- Contador de 4 bits utilizado para shiftear 16 veces.
 				data_sgn_1 <= aux_1(11 downto 0);
 				data_sgn_2 <= aux_2(11 downto 0);
 			end if;
 		end if;
 	end process;
- 
+
 	data_1 <= data_sgn_1;
 	data_2 <= data_sgn_2;
- 
+
 	---------------------------------------------------------------------------------
 	--
 	-- MQUINA DE ESTADOS
@@ -149,7 +149,7 @@ begin
 	-- Proceso en donde los estados son cambiados sincrnicamente.
 	--
 	-----------------------------------------------------------------------------------
- 
+
 	sync_proc : process (clk_div, rst)
 	begin
 		if rising_edge(clk_div) then
@@ -169,7 +169,7 @@ begin
 	-- solamente en el estado actual.
 	--
 	-----------------------------------------------------------------------------------
- 
+
 	output_decode_proc : process (current_state)
 	begin
 		if current_state = idle then
@@ -198,10 +198,10 @@ begin
 	-- las seales de entrada.
 	--
 	-----------------------------------------------------------------------------------
- 
+
 	next_state_decode_proc : process (current_state, start, shift_cnt)
 	begin
-		next_state <= current_state; -- La mquina tiende a quedarse en el estado actual
+		next_state <= current_state; -- La máquina tiende a quedarse en el estado actual
 
 		case (current_state) is
 			when idle => 
@@ -220,5 +220,5 @@ begin
 				next_state <= idle;
 		end case;
 	end process;
-	
+ 
 end behavioral;

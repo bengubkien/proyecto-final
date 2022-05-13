@@ -4,9 +4,9 @@ use ieee.std_logic_unsigned.all;
 
 entity button_debouncer is
 	port (
-		clk : in std_logic;
-		btn_in : in std_logic;
-		btn_out : out std_logic
+		clk      : in std_logic;
+		btn_in   : in std_logic;
+		btn_out  : out std_logic
 	);
 end button_debouncer;
 
@@ -14,8 +14,8 @@ architecture behavioral of button_debouncer is
 	constant CNT_SIZE : integer := 20;
 	signal btn_prev : std_logic := '0';
 	signal counter : std_logic_vector(CNT_SIZE downto 0) := (others => '0');
-	
-begin	
+ 
+begin
 	process (clk)
 	begin
 		if (rising_edge(clk)) then

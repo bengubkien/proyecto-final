@@ -1,20 +1,19 @@
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 
 entity clock_divider is
-port(
-clk : in std_logic;
-clk_div : out std_logic
-);
+	port (
+		clk : in std_logic;
+		clk_div : out std_logic
+	);
 end clock_divider;
 
 architecture behavioral of clock_divider is
 
-signal clk_div_sgn : std_logic := '0';
-signal clk_cnt : integer := 0;
+	signal clk_div_sgn : std_logic := '0';
+	signal clk_cnt : integer := 0;
 
 begin
-
 	clock_div_proc : process (clk)
 	begin
 		if rising_edge(clk) then -- 100MHz/2/80 = 625kHz
@@ -25,8 +24,7 @@ begin
 			end if;
 		end if;
 	end process;
-	
+ 
 	clk_div <= clk_div_sgn;
 
 end behavioral;
-

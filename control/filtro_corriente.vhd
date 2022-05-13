@@ -2,13 +2,16 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+-- Filtro pasa-bajos de primer orden con frecuencia de corte de 1.5kHz
+
 entity filtro_corriente is
 	port (
-		clk                   : in std_logic;
+		clk                  : in std_logic;
 		filtro_corriente_in   : in std_logic_vector(11 downto 0);
 		filtro_corriente_out  : out std_logic_vector(11 downto 0)
 	);
 end filtro_corriente;
+
 architecture rtl of filtro_corriente is
 
 	signal filtro_corriente_in_unsigned : unsigned(11 downto 0);
@@ -37,6 +40,7 @@ begin
 			delay_out1 <= add_out1;
 		end if;
 	end process delay_process;
+	
 	conversion_out_out1 <= unsigned(delay_out1(27 downto 16));
 
 	filtro_corriente_out <= std_logic_vector(conversion_out_out1);

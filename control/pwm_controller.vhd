@@ -9,11 +9,11 @@ entity pwm_controller is
 		bits_resolution : integer := 12
 	);
 	port (
-		clk : in std_logic;
-		rst : in std_logic;
-		duty_cycle : in std_logic_vector(bits_resolution - 1 downto 0);
-		pwm_out : out std_logic;
-		pwm_n_out : out std_logic
+		clk         : in std_logic;
+		rst         : in std_logic;
+		duty_cycle  : in std_logic_vector(bits_resolution - 1 downto 0);
+		pwm_out     : out std_logic;
+		pwm_n_out   : out std_logic
 	);
 end pwm_controller;
 
@@ -23,9 +23,8 @@ architecture behavioral of pwm_controller is
 	signal count : integer range 0 to period - 1 := 0;
 	signal half_duty_new : integer range 0 to period/2 := 0;
 	signal half_duty : integer range 0 to period/2;
-	
+ 
 begin
-
 	process (clk, rst)
 	begin
 		if (rst = '1') then
@@ -49,5 +48,5 @@ begin
 			end if;
 		end if;
 	end process;
-	
+ 
 end behavioral;
