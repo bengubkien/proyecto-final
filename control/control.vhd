@@ -6,15 +6,14 @@ use ieee.std_logic_arith.all;
 entity control is
 	port (
 		clk                                          : in std_logic;							
-		pwm_rst, integrator_u_rst, integrator_i_rst  : in std_logic;
-		switch_i_ref                                 : in std_logic;
+		pwm_rst, integrator_i_rst, switch_i_ref      : in std_logic;
 		sdata_1, sdata_2                             : in std_logic;
 		btn_add, btn_sub, btn_next, btn_prev         : in std_logic;
 		anodes                                       : out std_logic_vector (3 downto 0);
 		cathodes                                     : out std_logic_vector(7 downto 0);
 		d, d_n                                       : out std_logic;
 		sclk, cs                                     : out std_logic;
-		neg_flag                                     : out std_logic
+		neg_flag                                      : out std_logic
 	);
 end control;
 
@@ -220,7 +219,7 @@ begin
 	pi_u : pi_tension
 	port map(
 		clk             => clk_sample, 
-		integrator_rst  => integrator_u_rst, 
+		integrator_rst  => switch_i_ref, 
 		ref_in          => ref_u, 
 		tension_in      => tension_pi, 
 		pi_out          => pi_u_out

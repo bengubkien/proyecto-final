@@ -13,9 +13,8 @@ NET "d_n" LOC = "K1";
 
 # Resets
 NET "pwm_rst" LOC = "T5";
-NET "integrator_u_rst" LOC = "V8";
-NET "integrator_i_rst" LOC = "U8";
-NET "switch_i_ref" LOC = "N8";
+NET "integrator_i_rst" LOC = "V8";
+NET "switch_i_ref" LOC = "U8";
 
 # Ánodos del display
 NET "anodes<0>" LOC = "N16";
