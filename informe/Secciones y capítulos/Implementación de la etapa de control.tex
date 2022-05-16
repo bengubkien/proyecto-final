@@ -3,7 +3,7 @@
 
 \section{Introducción}
 
-En este capítulo se sintetiza e implementa la estrategia de control diseñada en el capítulo anterior. Debido a las características del lenguaje de programación a utilizar, los componentes del lazo de control deben ser programado individualmente, para después ser ensamblados en el sistema de control diseñado. Debido a esta propiedad de VHDL, además de la programación de cada componente, se realiza una simulación o \emph{test bench} para corroborar su correcto funcionamiento. Las herramientas utilizadas aquí fueron el entorno de desarrollo Xilinx ISE y los simuladores de código HDL ISim y ModelSim, los cuales fueron descritos en el Capítulo \ref{cap-fpga} Sección \ref{desarrollo-fpga}.
+En este capítulo se sintetiza e implementa la estrategia de control diseñada en el capítulo anterior. Debido a las características del lenguaje de programación a utilizar, los componentes del lazo de control deben ser programados individualmente, para después ser ensamblados en el sistema de control diseñado. Debido a esta propiedad de VHDL, además de la programación de cada componente, se realiza una simulación o \emph{test bench} para corroborar su correcto funcionamiento. Las herramientas utilizadas aquí fueron el entorno de desarrollo Xilinx ISE\textsuperscript\textregistered \hspace{0.6pt} y los simuladores de código HDL ISim\textsuperscript\textregistered \hspace{0.6pt} y ModelSim\textsuperscript\textregistered \hspace{0.6pt}, los cuales fueron descritos en el Capítulo \ref{cap-fpga} Sección \ref{desarrollo-fpga}.
 
 \section{Placa de desarrollo a utilizar}
 
@@ -20,11 +20,11 @@ En el Capítulo \ref{cap-fpga}, Sección \ref{subseccion-nexys-3}, fue presentad
 
 Esta placa presenta slices específicamente diseñados para aplicaciones de procesamiento de señales (\mbox{\emph{DSP slices}}), los que permiten un cálculo de punto fijo con gran resolución, funcionalidad necesaria para sintetizar los controladores y filtros mostrados en esta sección, y tener la seguridad de que los límites de la placa no son excedidos.
 
-Para la programación de la Nexys 3 es necesario utilizar el entorno de desarrollo de Xilinx, el cual posee varias herramientas que permitirán verificar el correcto funcionamiento de cada modelo programado y visualizar el interconexionado de cada bloque que conforma el sistema de control implementado. 
+Para la programación de la Nexys 3 es necesario utilizar el entorno de desarrollo de Xilinx\textsuperscript\textregistered \hspace{0.6pt}, el cual posee varias herramientas que permitirán verificar el correcto funcionamiento de cada modelo programado y visualizar el interconexionado de cada bloque que conforma el sistema de control implementado. 
 
 \section{Conversor analógico-digital}
 
-La primer pieza del lazo de control programada fue el controlador de los conversores analógico-digitales. Previo a esta tarea fue necesario comprender el protocolo de comunicación del \emph{Pmod AD1}, el cual está compuesto por dos ADC \emph{AD7476A}. El protocolo utilizado por estos conversores es \emph{SPI-like} con una señal de \emph{Chip Select} ($\overline{\mbox{CS}}$), con la única diferencia de que ambas líneas de datos (\emph{MOSI} y \emph{MISO}) son diseñadas para operar únicamente como salidas, y por lo tanto ambas son definidas como líneas de datos \emph{Master-In-Slave-Out}.
+La primer pieza del lazo de control programada fue el controlador de los conversores analógico-digitales. Previo a esta tarea fue necesario comprender el protocolo de comunicación del \emph{Pmod AD1}, el cual está compuesto por dos ADC \emph{AD7476A} de Analog Devices. El protocolo utilizado por estos conversores es \emph{SPI-like} con una señal de \emph{Chip Select} ($\overline{\mbox{CS}}$), con la única diferencia de que ambas líneas de datos (\emph{MOSI} y \emph{MISO}) son diseñadas para operar únicamente como salidas, y por lo tanto ambas son definidas como líneas de datos \emph{Master-In-Slave-Out}.
 
 Los ADCs poseen una resolución de 12 bits, con una frecuencia de muestreo máxima de 1MS/s y un filtro antialiasing \cite{ad7476a}. Ambos conversores transforman una señal que va de 0 a $\mathrm{V_{DD}}$, en un valor digital con un rango de 0 a 4095. En la Figura \ref{diagramas-adc} pueden observarse los diagramas circuitales del Pmod AD1 y de los AD7476A.
 
@@ -54,7 +54,7 @@ Para poder utilizar ambos conversores se implementó un controlador en VHDL a pa
     \item Por último, en el estado \texttt{idle} el controlador permanece inactivo, lo cual es necesario entre conversiones.
 \end{enumerate}
 
-En la Figura \ref{adc-controller} puede observarse el \emph{test bench} realizado para el controlador con el software ModelSim.
+En la Figura \ref{adc-controller} puede observarse el \emph{test bench} realizado para el controlador con el software ModelSim\textsuperscript\textregistered.
 
 \begin{figure}[hbt!]
     \centering
@@ -111,7 +111,7 @@ Generado el código de VHDL, se realiza nuevamente otro \emph{test bench} para p
 \section{Controlador proporcional-integral}
 \label{implementacion-pid}
 
-La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered \hspace{0.6pt} es el de la Figura \ref{estructura-pi}. El bloque de saturación antes de la salida fue agregado para implementar el sistema de \emph{anti-windup}. El tipo de datos para la representación de los parámetros diseñados fue de punto fijo de 32 bits de longitud de palabra, con 16 bits para la fracción. El método de anti-windup elegido, llamado \emph{clamping} (y explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}), se programó en VHDL, implementando un registro que guarde valores en la entrada del delay antes de que se detecte la saturación de la salida del controlador. Si se detecta la saturación, el retardo empieza a alimentarse con el valor del registro hasta que la salida no se encuentre saturada.
+La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered\hspace{0.05pt} es el de la Figura \ref{estructura-pi}. En este diagrama pueden visualizarse dos saturaciones: la primera, llamada \texttt{saturation}, evita que la acción de control calculada por el PI exceda los límites inferiores y superiores impuestos por él; mientras que \texttt{clamping} cumple el rol de sistema \emph{anti-windup} (explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}). El tipo de datos para la representación de los parámetros diseñados fue de punto fijo de 32 bits de longitud de palabra, con 16 bits para la fracción.
 
 \begin{figure}[hbt!]
     \centering
@@ -129,13 +129,32 @@ Como los mecanismos de ambos controladores PI son iguales, se programa una únic
     \label{simulacion-pi}
 \end{figure} 
 
+Para cada controlador proporcional-integral se implementó un \emph{reset} que permite la habilitación de su parte integral. En el caso del lazo de tensión, este \emph{reset} también actúa como una llave: si se encuentra en alto, el integrador se desactiva, y la acción de control generada por el lazo externo se desconecta del lazo interno, el cual a su vez se conecta a una referencia con un valor establecido manualmente.
+
+\section{Referencia}
+
+Para poder establecer un valor de tensión o corriente que el sistema de control tenga que seguir, un bloque de referencia fue implementado. Este bloque consiste en dos señales de referencia: 
+
+\begin{itemize}
+    \item La señal de referencia de tensión, la cual se encuentra inicializada en \SI{10}{\volt} y puede aumentarse o reducirse en escalones de \SI{1}{\volt}. Esta señal puede ser modificada sólo si el lazo externo de control de tensión se encuentra habilitado mediante el \emph{reset} mencionado anteriormente.
+    \item La señal de referencia de corriente, la cual es inicializada en \SI{0}{\ampere} y sus escalones son de \SI{0.125}{\ampere}. Esta señal puede ser modificada sólo si el lazo de tensión se encuentra deshabilitado.
+\end{itemize}
+
+Ambas señales de referencia son representadas con punto fijo de 32 bits de palabra, con 16 bits para la fracción, al igual que los controladores PI.
+
+\section{Display y botones}
+
+Para la visualización de las mediciones y las referencias establecidas se utilizan los cuatro \emph{display} siete segmentos, los cuales permiten mostrar dos dígitos enteros, uno de la fracción, y la unidad de la variable elegida.
+
+Junto al controlador de este display se implementó un sistema antirrebote para cada botón utilizado en el sistema. En total, cuatro botones son utilizados: dos para la elección de la variable a mostrar, y otros dos para aumentar o disminuir el valor de la referencia seleccionada por la llave del lazo de tensión. 
+
 \section{Controlador PWM}
 
 El generador de la onda modulada por ancho de pulsos hace de vínculo entre la acción de control y el convertidor. Este bloque recibe como entrada un ciclo de trabajo provisto por el controlador proporcional-integral, y comparándolo con un contador, lo transforma en una señal de ancho de pulso modulado (PWM). Este bloque posee como salidas la señal PWM y su complemento para accionar ambas llaves del convertidor.
 
 El controlador fue programado completamente en VHDL y recibe un ciclo de trabajo con resolución de 12 bits (al igual que la resolución de las muestras de los conversores analógico-digitales), generando una onda PWM correspondiente con una frecuencia de 20kHz a partir de un contador y un comparador. En la Figura \ref{simulacion-pwm} se ingresa al controlador con el valor decimal 2047, que genera una onda de ancho de pulso modulado con un ciclo de trabajo del 50\%, y también se puede corroborar que su período es de \SI{50}{\micro\second}.
 
-Para este componente también fue implementado un \emph{reset} asincrónico que pone en cero a \texttt{pwm\_out} y en uno a su complemento por cuestiones de seguridad.
+Para este componente también fue implementado un \emph{reset} asincrónico que pone en cero a \texttt{pwm\_out} y a su complemento por cuestiones de seguridad.
 
 \begin{figure}[hbt!]
     \centering
@@ -148,6 +167,17 @@ Para este componente también fue implementado un \emph{reset} asincrónico que 
 
 Una vez programados todos los componentes se realiza la interconexión entre ellos. Esto es logrado a través de la instanciación de cada modelo, concepto detallado en el Capítulo \ref{cap-fpga}. El modelo resultante, al tratarse solamente de la vinculación entre cada componente, posee una arquitectura estructural, como fue explicado en la Sección \ref{vhdl-estruct}.
 
-Con el lazo de control armado con todos sus componentes y sintetizado en Xilinx ISE, se observa su diagrama RTL confeccionado por el entorno de desarrollo en la Figura X.
+Con el lazo de control armado con todos sus componentes y sintetizado en Xilinx ISE\textsuperscript\textregistered\hspace{0.05pt}, se observa su diagrama RTL (del inglés \emph{register-transfer level}, lo cual equivale a un diagrama de bloques y señales para lenguajes HDL) creado por el entorno de desarrollo en la Figura \ref{rtl-lazo}.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.65\columnwidth]{Imágenes/Diagrama RTL del lazo de tensión.pdf}    
+    \caption{Diagrama RTL del lazo de tensión.}
+    \label{rtl-lazo}
+\end{figure} 
+
+\section{Resumen}
+
+En este capítulo fue mostrada la implementación de los bloques del sistema de control diseñado. Para esto, fue necesario utilizar varias herramientas que permitieron su traducción a VHDL, la síntesis de este código generado, y finalmente la simulación y ensayo de cada componente para verificar su correcto funcionamiento. Para la representación de las señales calculadas en cada instanciación, se eligió un tipo de dato de punto fijo que permitió su cálculo con un bajo error, de manera de poder generar un ciclo de trabajo preciso que es alimentado al convertidor electrónico de potencia. 
 
 \newpage

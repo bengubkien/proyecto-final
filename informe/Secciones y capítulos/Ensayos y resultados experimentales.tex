@@ -28,7 +28,7 @@ Realizando escalones de \SI{3}{\ampere} con este sistema de control, se obtuvier
 
 \subsection{Lazo de control de tensión}
 
-Para el lazo de control de tensión se realizaron una serie de ensayos bajo distintas condiciones para determinar la performance del sistema de control implementado. Los primeros ensayos consistieron en pequeños escalones en la tensión de referencia. Una vez verificado el correcto funcionamiento del sistema a lazo cerrado, se realizaron pruebas más demandantes al lazo de control, variando la resistencia de carga y observando la respuesta de la corriente de entrada y tensión de salida. En la Figura \ref{var-r-lazo-tension} pueden observarse las respuestas de ambas variables de estado para un salto de \SI{20}{\ohm} a \SI{40}{\ohm}.
+Para el lazo de control de tensión se realizaron una serie de ensayos bajo distintas condiciones para determinar la performance del sistema de control implementado. Los primeros ensayos consistieron en pequeños escalones en la tensión de referencia. Una vez verificado el correcto funcionamiento del sistema a lazo cerrado, se realizaron pruebas más demandantes al lazo de control, variando la resistencia de carga y observando la respuesta de la corriente de entrada y tensión de salida. En la Figura \ref{var-r-lazo-tension} pueden observarse las respuestas de ambas variables de estado para un salto de \SI{20}{\ohm} a \SI{40}{\ohm} con una referencia impuesta en \SI{24}{\volt}.
 
 En ambos casos puede observarse una rápida y robusta recuperación del nivel de tensión establecido por la referencia. Para el caso del escalón positivo de resistencia, existe una leve oscilación que termina en el establecimiento de la tensión de salida en un valor de \SI{24}{\volt}.
 
@@ -39,5 +39,7 @@ En ambos casos puede observarse una rápida y robusta recuperación del nivel de
   \caption{Resultados de los ensayos del lazo de tensión.}
   \label{var-r-lazo-tension}
 \end{figure}
+
+\section{Resumen}
 
 \newpage
