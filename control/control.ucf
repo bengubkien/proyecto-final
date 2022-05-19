@@ -40,3 +40,6 @@ NET "btn_prev" LOC = "C4";
 
 # Flag de corriente negativa
 NET "neg_flag" LOC = "U16";
+
+# UART
+NET "uart_tx" LOC = "N18";

@@ -13,6 +13,7 @@ entity control is
 		cathodes                                     : out std_logic_vector(7 downto 0);
 		d, d_n                                       : out std_logic;
 		sclk, cs                                     : out std_logic;
+		uart_tx                                       : out std_logic;
 		neg_flag                                      : out std_logic
 	);
 end control;
@@ -158,6 +159,15 @@ architecture structural of control is
 			cathodes           : out std_logic_vector(7 downto 0)
 		);
 	end component;
+	
+	component uart is
+		port (
+			clk  : in std_logic;
+			data : in std_logic_vector(7 downto 0);
+			tx  : out std_logic
+		);
+	end component;
+			
 
 begin
 	clk_sample_divider : clock_divider
@@ -260,6 +270,13 @@ begin
 		btn_sub_debounced  => btn_sub_debounced, 
 		anodes             => anodes, 
 		cathodes           => cathodes
+	);
+	
+	datos_uart : uart
+	port map(
+		clk => clk,
+		data => corriente_pi(31) & corriente_pi(19 downto 13),
+		tx  => uart_tx
 	);
 
 	d <= pwm_out;
