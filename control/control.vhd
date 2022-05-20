@@ -46,6 +46,8 @@ architecture structural of control is
 
 	signal pwm_out : std_logic;
 	signal pwm_n_out : std_logic;
+	
+	signal uart_data : std_logic_vector(0 to 63);
 
 	component clock_divider is
 		port (
@@ -163,7 +165,7 @@ architecture structural of control is
 	component uart is
 		port (
 			clk  : in std_logic;
-			data : in std_logic_vector(7 downto 0);
+			data : in std_logic_vector(63 downto 0);
 			tx  : out std_logic
 		);
 	end component;
@@ -272,10 +274,11 @@ begin
 		cathodes           => cathodes
 	);
 	
+	
 	datos_uart : uart
 	port map(
 		clk => clk,
-		data => corriente_pi(31) & corriente_pi(19 downto 13),
+		data => x"FEDCBA9876543210",
 		tx  => uart_tx
 	);
 

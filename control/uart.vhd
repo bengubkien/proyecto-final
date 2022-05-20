@@ -5,14 +5,14 @@ use ieee.numeric_std.all;
 entity uart is
 	port (
 		clk  : in std_logic;
-		data : in std_logic_vector(7 downto 0);
+		data : in std_logic_vector(63 downto 0);
 		tx   : out std_logic
 	);
 end uart;
 
 architecture structural of uart is
 
-	signal tx_data : std_logic_vector(7 downto 0);
+	signal tx_data : std_logic_vector(63 downto 0);
 	signal tx_start : std_logic := '0';
 	signal tx_busy : std_logic;
 
@@ -21,7 +21,7 @@ architecture structural of uart is
 			clk    : in std_logic;
 			start  : in std_logic;
 			busy   : out std_logic;
-			data   : in std_logic_vector(7 downto 0);
+			data   : in std_logic_vector(63 downto 0);
 			tx     : out std_logic
 		);
 	end component;
