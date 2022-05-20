@@ -278,7 +278,7 @@ begin
 	datos_uart : uart
 	port map(
 		clk => clk,
-		data => x"FEDCBA9876543210",
+		data => data_1 & data_2_filtered & pi_i_out & pi_u_out(27 downto 0),
 		tx  => uart_tx
 	);
 
