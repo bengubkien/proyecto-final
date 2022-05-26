@@ -16,7 +16,7 @@ end referencia;
 
 architecture behavioral of referencia is
 
-	signal ref_u : signed(31 downto 0) := x"000A0000";		-- Inicialización en 10V
+	signal ref_u : signed(31 downto 0) := x"000F0000";		-- Inicialización en 10V
 	signal ref_i : signed(31 downto 0) := (others => '0');
 	signal btns_reg : std_logic_vector(1 downto 0);
 

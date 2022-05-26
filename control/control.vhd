@@ -25,6 +25,7 @@ architecture structural of control is
 	signal data_1 : std_logic_vector (11 downto 0);
 	signal data_2 : std_logic_vector (11 downto 0);
 
+	signal data_1_filtered : std_logic_vector (11 downto 0);
 	signal data_2_filtered : std_logic_vector (11 downto 0);
 
 	signal tension_pi : std_logic_vector (31 downto 0);
@@ -198,6 +199,13 @@ begin
 		filtro_corriente_in   => data_2, 
 		filtro_corriente_out  => data_2_filtered
 	);
+	
+	fir_tension : filtro_corriente
+	port map(
+		clk                   => clk_sample, 
+		filtro_corriente_in   => data_1, 
+		filtro_corriente_out  => data_1_filtered
+	);
 
 	ref : referencia
 	port map(
@@ -211,7 +219,7 @@ begin
 
 	conv_tension : conversion_tension
 	port map(
-		conv_u_in      => data_1, 
+		conv_u_in      => data_1_filtered, 
 		conv_ref_in    => ref_u, 
 		conv_u_out     => tension_pi, 
 		conv_u_disp    => tension_display, 
