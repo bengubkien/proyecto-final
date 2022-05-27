@@ -18,11 +18,13 @@ En este capítulo se sintetiza e implementa la estrategia de control diseñada e
 
 En el Capítulo \ref{cap-fpga}, Sección \ref{subseccion-nexys-3}, fue presentada la placa de desarrollo Nexys 3, la cual posee un FPGA Spartan-6. Esta placa es la utilizada para implementar el algoritmo de control que se detallará a lo largo de este capítulo, debido a su gran cantidad de recursos lógicos y amplia cantidad de elementos I/O (botones, switches, LEDs, etc.).
 
-Esta placa presenta slices específicamente diseñados para aplicaciones de procesamiento de señales (\mbox{\emph{DSP slices}}), los que permiten un cálculo de punto fijo con gran resolución, funcionalidad necesaria para sintetizar los controladores y filtros mostrados en esta sección, y tener la seguridad de que los límites de la placa no son excedidos.
+Esta placa presenta \emph{slices} específicamente diseñados para aplicaciones de procesamiento de señales (llamados \mbox{\emph{DSP slices}}), los que permiten un cálculo de punto fijo con gran resolución, funcionalidad necesaria para sintetizar los controladores y filtros mostrados en esta sección.
 
 Para la programación de la Nexys 3 es necesario utilizar el entorno de desarrollo de Xilinx\textsuperscript\textregistered \hspace{0.6pt}, el cual posee varias herramientas que permitirán verificar el correcto funcionamiento de cada modelo programado y visualizar el interconexionado de cada bloque que conforma el sistema de control implementado. 
 
-\section{Conversor analógico-digital}
+\section{Implementación de la etapa de control}
+
+\subsection{Conversor analógico-digital}
 
 La primer pieza del lazo de control programada fue el controlador de los conversores analógico-digitales. Previo a esta tarea fue necesario comprender el protocolo de comunicación del \emph{Pmod AD1}, el cual está compuesto por dos ADC \emph{AD7476A} de Analog Devices. El protocolo utilizado por estos conversores es \emph{SPI-like} con una señal de \emph{Chip Select} ($\overline{\mbox{CS}}$), con la única diferencia de que ambas líneas de datos (\emph{MOSI} y \emph{MISO}) son diseñadas para operar únicamente como salidas, y por lo tanto ambas son definidas como líneas de datos \emph{Master-In-Slave-Out}.
 
@@ -37,7 +39,7 @@ Los ADCs poseen una resolución de 12 bits, con una frecuencia de muestreo máxi
     \label{diagramas-adc}
 \end{figure}
 
-El principio de funcionamiento de los conversores consta del $\overline{\mbox{CS}}$ y un reloj en serie SCLK. Cuando se produce un flanco en SCLK y $\overline{\mbox{CS}}$ está bajo, los conversores empiezan a muestrear. En total, cada ADC produce 16 bits, en donde los cuatro primeros bits son cero, y los restante 12 bits son la muestra con el bit más significativo primero. En la Figura \ref{adc-timing} se observa el diagrama de tiempos del conversor.
+El principio de funcionamiento de los conversores consta del $\overline{\mbox{CS}}$ y un reloj en serie SCLK. Cuando se produce un flanco en SCLK y $\overline{\mbox{CS}}$ está bajo, los conversores empiezan a muestrear. En total, cada ADC produce 16 bits, en donde los cuatro primeros bits son cero, y los restantes 12 bits son la muestra con el bit más significativo primero. En la Figura \ref{adc-timing} se observa el diagrama de tiempos del conversor.
 
 \begin{figure}[hbt!]
     \centering
@@ -63,13 +65,13 @@ En la Figura \ref{adc-controller} puede observarse el \emph{test bench} realizad
     \label{adc-controller}
 \end{figure} 
 
-En esta simulación, \texttt{start} se pone en alto, y cuando el controlador recibe un flanco ascendente de \texttt{sclk}, \texttt{cs} se pone en bajo. Esto significa que la conversión comienza a efectuarse. Luego de iniciar el muestreo, se reciben en los siguientes ocho flancos ascendentes del reloj todos ceros en \texttt{sdata\_1}, y luego el patrón que puede observarse (un uno, un cero, otro uno, un cero más, y luego todos unos, en ese orden). Finalmente después de 16 ciclos de \texttt{sclk} los datos se sincronizan a través de la máquina de estados en un vector de 12 bits llamado \texttt{data\_1} en el cual se descartan los primeros 4 ceros.
+En esta simulación, \texttt{start} se pone en alto, y cuando el controlador recibe un flanco ascendente de \texttt{sclk}, \texttt{cs} se pone en bajo. Esto significa que la conversión comienza a efectuarse. Luego de iniciar el muestreo, se reciben en los siguientes ocho flancos ascendentes del reloj todos ceros en \texttt{sdata\_1}, y luego el patrón que puede observarse (un uno, un cero, otro uno, un cero más, y luego todos unos, en ese orden). Finalmente, después de 16 ciclos de \texttt{sclk}, los datos se sincronizan a través de la máquina de estados en un vector de 12 bits llamado \texttt{data\_1}, en el cual se descartan los primeros 4 ceros.
 
 En este controlador, \texttt{sclk} es un reloj de frecuencia \SI{12.5}{\mega\hertz}, mientras que la frecuencia de muestreo (lo que sería \texttt{start}) es de \SI{625}{\kilo\hertz}. 
 
-\section{Filtro digital}
+\subsection{Filtro digital}
 
-Una vez muestreada la corriente, es importante que el lazo interno de corriente reciba un valor medio para que su dinámica resulte suave y no se produzcan exabruptos que pueden poner en peligro al sistema. Por lo tanto, un filtro es diseñado para atenuar el \emph{ripple} de la corriente, resultado de la conmutación de las llaves del convertidor como fue mencionado en capítulos anteriores y puede observarse en la Figura \ref{formas-onda-elevador}b. Por eso mismo, se implementa un filtro pasabajos digital de primer orden, con frecuencia de corte $f_c$ de 1.5kHz. La razón de esta elección fue mencionada en el Capítulo \ref{diseno-control}, Sección \ref{diseno-filtro-corriente}. La Ecuación \ref{filtro-corriente-discretizado} representa a la transferencia discreta del filtro a implementar. Desarrollando la función de transferencia:
+Una vez muestreada la corriente, es importante que el lazo interno de corriente reciba un valor medio para que su dinámica resulte suave y no se produzcan exabruptos que puedan poner en peligro al sistema. Por lo tanto, un filtro es diseñado para atenuar el \emph{ripple} de la corriente, resultado de la conmutación de las llaves del convertidor como fue mencionado en capítulos anteriores y puede observarse en la Figura \ref{formas-onda-elevador}b. Por eso mismo, se implementa un filtro pasabajos digital de primer orden, con frecuencia de corte $f_c$ de 1.5kHz. La razón de esta elección fue mencionada en el Capítulo \ref{diseno-control}, Sección \ref{diseno-filtro-corriente}. La Ecuación \ref{filtro-corriente-discretizado} representa a la transferencia discreta del filtro a implementar. Desarrollando la función de transferencia:
 
 \begin{equation*}
     z \, Y(z) - 0.98492 \, Y(z) = 0.0150796 \, X(z)
@@ -108,7 +110,7 @@ Generado el código de VHDL, se realiza nuevamente otro \emph{test bench} para p
     \label{simulacion-filtro}
 \end{figure} 
 
-\section{Controlador proporcional-integral}
+\subsection{Controlador proporcional-integral}
 \label{implementacion-pid}
 
 La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered\hspace{0.05pt} es el de la Figura \ref{estructura-pi}. En este diagrama pueden visualizarse dos saturaciones: la primera, llamada \texttt{saturation}, evita que la acción de control calculada por el PI exceda los límites inferiores y superiores impuestos por él; mientras que \texttt{clamping} cumple el rol de sistema \emph{anti-windup} (explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}). El tipo de datos para la representación de los parámetros diseñados fue de punto fijo de 32 bits de longitud de palabra, con 16 bits para la fracción.
@@ -129,9 +131,9 @@ Como los mecanismos de ambos controladores PI son iguales, se programa una únic
     \label{simulacion-pi}
 \end{figure} 
 
-Para cada controlador proporcional-integral se implementó un \emph{reset} que permite la habilitación de su parte integral. En el caso del lazo de tensión, este \emph{reset} también actúa como una llave: si se encuentra en alto, el integrador se desactiva, y la acción de control generada por el lazo externo se desconecta del lazo interno, el cual a su vez se conecta a una referencia con un valor establecido manualmente.
+Para cada controlador proporcional-integral se implementó un \emph{reset} que permite la habilitación de su parte integral. 
 
-\section{Referencia}
+\subsection{Referencia}
 
 Para poder establecer un valor de tensión o corriente que el sistema de control tenga que seguir, un bloque de referencia fue implementado. Este bloque consiste en dos señales de referencia: 
 
@@ -142,19 +144,11 @@ Para poder establecer un valor de tensión o corriente que el sistema de control
 
 Ambas señales de referencia son representadas con punto fijo de 32 bits de palabra, con 16 bits para la fracción, al igual que los controladores PI.
 
-\section{Display y botones}
-
-Para la visualización de las mediciones y las referencias establecidas se utilizan los cuatro \emph{display} siete segmentos, los cuales permiten mostrar dos dígitos enteros, uno de la fracción, y la unidad de la variable elegida.
-
-Junto al controlador de este display se implementó un sistema antirrebote para cada botón utilizado en el sistema. En total, cuatro botones son utilizados: dos para la elección de la variable a mostrar, y otros dos para aumentar o disminuir el valor de la referencia seleccionada por la llave del lazo de tensión. 
-
-\section{Controlador PWM}
+\subsection{Controlador PWM}
 
 El generador de la onda modulada por ancho de pulsos hace de vínculo entre la acción de control y el convertidor. Este bloque recibe como entrada un ciclo de trabajo provisto por el controlador proporcional-integral, y comparándolo con un contador, lo transforma en una señal de ancho de pulso modulado (PWM). Este bloque posee como salidas la señal PWM y su complemento para accionar ambas llaves del convertidor.
 
 El controlador fue programado completamente en VHDL y recibe un ciclo de trabajo con resolución de 12 bits (al igual que la resolución de las muestras de los conversores analógico-digitales), generando una onda PWM correspondiente con una frecuencia de 20kHz a partir de un contador y un comparador. En la Figura \ref{simulacion-pwm} se ingresa al controlador con el valor decimal 2047, que genera una onda de ancho de pulso modulado con un ciclo de trabajo del 50\%, y también se puede corroborar que su período es de \SI{50}{\micro\second}.
-
-Para este componente también fue implementado un \emph{reset} asincrónico que pone en cero a \texttt{pwm\_out} y a su complemento por cuestiones de seguridad.
 
 \begin{figure}[hbt!]
     \centering
@@ -163,9 +157,55 @@ Para este componente también fue implementado un \emph{reset} asincrónico que 
     \label{simulacion-pwm}
 \end{figure} 
 
-\section{Construcción del lazo de control}
+\section{Implementación de módulos auxiliares}
 
-Una vez programados todos los componentes se realiza la interconexión entre ellos. Esto es logrado a través de la instanciación de cada modelo, concepto detallado en el Capítulo \ref{cap-fpga}. El modelo resultante, al tratarse solamente de la vinculación entre cada componente, posee una arquitectura estructural, como fue explicado en la Sección \ref{vhdl-estruct}.
+\subsection{Display de siete segmentos}
+
+Para la visualización de las mediciones y referencias de corriente de entrada y tensión de salida se utilizaron los cinco display de siete segmentos que posee la placa de desarrollo Nexys 3. La selección de la variable a representar en los display se selecciona mediante un registro el cual es manejado a través de un par de botones.
+
+\subsection{Botones de selección y referencia}
+
+Para el sistema de control, cuatro botones fueron utilizados. Dos de ellos permiten el control de los display siete segmentos, como fue mencionado anteriormente, y el otro par permiten el aumento o reducción del valor de referencia seleccionado. Para la implementación de los botones fue necesario programar un componente antirrebote de aproximadamente 100 milisegundos, el cual fue luego instanciado cuatro veces (una para cada botón).
+
+\subsection{Llaves de habilitación}
+
+Por motivos de seguridad, se recurrió al uso de tres llaves de las ocho que posee la placa de desarrollo. Estas consisten en la habilitación o deshabilitación de un componente en específico en el caso de que surja un comportamiento que pueda poner en peligro al sistema, o si se quisiera realizar una habilitación secuencial de los componentes para un ensayo más controlado.
+
+Las llaves utilizadas controlan los siguientes componentes:
+
+\begin{enumerate}
+    \item El bloque generador de la señal PWM. Si esta llave es habilitada, la señal PWM y su complemento son llevadas a un nivel bajo.
+    \item El componente integrador del controlador PI de corriente.  
+    \item El lazo de control de tensión. Si se encuentra en alto, el integrador se desactiva, y la acción de control generada por el lazo externo se desconecta del lazo interno, el cual a su vez se conecta a una referencia con un valor establecido manualmente.
+\end{enumerate}
+
+\subsection{Comunicación UART}
+
+Un transmisor UART (del inglés \emph{Universal Asynchronous Receiver-Transmitter}) fue programado en el FPGA para poder enviar las mediciones y acciones de control calculadas a una computadora. Debido a que este tipo de comunicación consiste en paquetes de 10 bits (dos bits de inicio y fin, y ocho de datos), se decidió implementar un transmisor que sea capaz de enviar en 64 bits de datos, divididos de la siguiente manera:
+
+\begin{enumerate}
+    \item 12 bits correspondientes a la medición de tensión de carga.
+    \item 12 bits correspondientes a la medición de corriente de entrada.
+    \item 12 bits correspondientes a la acción de control del lazo interno de corriente.
+    \item 28 bits correspondientes a la acción de control del lazo externo de tensión.
+\end{enumerate}
+
+En la Figura \ref{uart} puede observarse el diagrama de tiempos de cada paquete correspondiente al protocolo de comunicación UART.
+
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.65\columnwidth]{Imágenes/UART.pdf}
+    \caption{Diagrama de tiempos del protocolo de comunicación UART.}
+    \label{uart}
+\end{figure} 
+
+Ya que en este tipo de comunicación asincrónica no es posible recibir los datos en orden, se utilizaron otros 64 bits para indexar cada paquete de datos. La recepción y reordenamiento de los paquetes transmitidos por la Nexys 3 fue hecho en MATLAB\textsuperscript\textregistered. Para poder ordenar cada paquete, cuatro bits de datos fueron utilizados para un número en hexadecimal (de 0 a F), y los otros cuatro bits para los datos a transmitir. En total son transmitidos 160 bits a una tasa de 256000 baudios.
+
+\section{Construcción del sistema de control}
+
+Una vez programados todos los componentes, se realiza la interconexión entre ellos. Esto es logrado a través de la instanciación de cada modelo en un \emph{top-level file}, concepto detallado en el Capítulo \ref{cap-fpga}. El modelo resultante, al tratarse solamente de la vinculación entre cada componente, posee una arquitectura estructural, como fue explicado en la Sección \ref{vhdl-estruct}.
+
+El sistema de control está compuesto por los componentes propios que permiten la medición de las variables, su filtrado, y el cálculo de la acción de control a partir de una referencia establecida por el usuario. Los módulos auxiliares generan la interfaz entre la placa de desarrollo y su operador, y posibilita la visualización de las variables y las referencias, así como la manipulación de estas últimas. En el caso de ser necesario, el operador también puede utilizar las tres llaves de seguridad programadas.
 
 Con el lazo de control armado con todos sus componentes y sintetizado en Xilinx ISE\textsuperscript\textregistered\hspace{0.05pt}, se observa su diagrama RTL (del inglés \emph{register-transfer level}, lo cual equivale a un diagrama de bloques y señales para lenguajes HDL) creado por el entorno de desarrollo en la Figura \ref{rtl-lazo}.
 

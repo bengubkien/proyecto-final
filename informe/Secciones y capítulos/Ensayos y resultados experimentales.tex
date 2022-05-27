@@ -4,11 +4,9 @@
 
 Una vez implementado el sistema de control diseñado en la placa de desarrollo Nexys 3, se realizan una serie de ensayos para verificar su correcto funcionamiento. Estos ensayos fueron realizados en forma progresiva, en un principio probando sólamente el generador PWM junto con el ADC en un esquema lazo abierto. Luego de ir confirmando el correcto funcionamiento, se fueron agregando más componentes para finalmente realizar un ensayo con el lazo cerrado de tensión.
 
-\section{Pruebas a lazo abierto}
+\section{Con fuente de potencia}
 
 Las primeras pruebas realizadas a lazo abierto consistieron en la utilización del controlador PWM para las señales de los transistores del convertidor CC-CC. Luego, se implementó al controlador del conversor analógico-digital para permitir la variación del ciclo de trabajo mediante un potenciómetro, cuyo valor era filtrado por el filtro diseñado e implementado a \SI{1.5}{\kilo\hertz}.
-
-\section{Pruebas a lazo cerrado}
 
 \subsection{Lazo de control de corriente}
 
@@ -24,7 +22,7 @@ El primer ensayo a lazo cerrado consistió en el control de la corriente por el 
 
 Como medida de seguridad, se implementaron llaves que permiten habilitar o deshabilitar el integrador del controlador. Además, este componente posee una saturación a su salida, para evitar el cálculo de un ciclo de trabajo mayor a 1 o 100\%; y el método anti-windup explicado anteriormente.
 
-Realizando escalones de \SI{3}{\ampere} con este sistema de control, se obtuvieron los siguientes resultados de la Figura \ref{escalones-lazo-corriente}. Se puede observar que la corriente se establece en el nuevo valor de referencia en cuestión de microsegundos sin causar un sobrepico abrupto o peligroo, y por lo tanto se considera que el lazo de corriente controla satisfactoramiente a la variable de estado.
+Realizando escalones de \SI{3}{\ampere} con este sistema de control, se obtuvieron los siguientes resultados de la Figura \ref{escalones-lazo-corriente}. Se puede observar que la corriente se establece en el nuevo valor de referencia en cuestión de microsegundos sin causar un sobrepico abrupto o peligroso, y por lo tanto se considera que el lazo de corriente controla satisfactoramiente a la variable de estado.
 
 \subsection{Lazo de control de tensión}
 
@@ -39,6 +37,8 @@ En ambos casos puede observarse una rápida y robusta recuperación del nivel de
   \caption{Resultados de los ensayos del lazo de tensión.}
   \label{var-r-lazo-tension}
 \end{figure}
+
+\section{Con supercapacitores}
 
 \section{Resumen}
 

@@ -114,24 +114,24 @@ Normalmente la reacción del modelo a un evento ocasionará la ejecución de otr
 
 \subsection{Intel Quartus Prime}
 
-\emph{Intel Quartus Prime} es el entorno de diseño desarrollado por Intel (previamente por Altera). Permite al usuario el análisis y síntesis de diseños HDL, lo que habilita al desarrollador a compilar sus diseños, realizar análisis de tiempo, examinar diagramas RTL, simular la reacción de un modelo frente a distintos estímulos, y configurar el dispositivo a utilizar con el programador. Es importante aclarar que esto último solamente es posible con familias de FPGAs que Quartus Prime soporta, como por ejemplo la familia \emph{Cyclone}.
-Quartus Prime incluye una implementación de VHDL y Verilog para descripción de hardware, edición visual de circuitos lógicos, y simulación de formas de onda vectoriales.
+\emph{Intel Quartus Prime}\textsuperscript\textregistered\hspace{0.05pt} es el entorno de diseño desarrollado por Intel\textsuperscript\textregistered\hspace{0.05pt} (previamente por Altera). Permite al usuario el análisis y síntesis de diseños HDL, lo que habilita al desarrollador a compilar sus diseños, realizar análisis de tiempo, examinar diagramas RTL, simular la reacción de un modelo frente a distintos estímulos, y configurar el dispositivo a utilizar con el programador. Es importante aclarar que esto último solamente es posible con familias de FPGAs que Quartus Prime\textsuperscript\textregistered\hspace{0.05pt} soporta, como por ejemplo la familia \emph{Cyclone}.
+Quartus Prime\textsuperscript\textregistered\hspace{0.05pt} incluye una implementación de VHDL y Verilog para descripción de hardware, edición visual de circuitos lógicos, y simulación de formas de onda vectoriales.
 
 \subsection{Xilinx ISE}
 
-\emph{Xilinx ISE} (Integrated Synthesis Environment) es una herramienta de software de Xilinx para la síntesis y análisis de diseños HDL, la cual está principalmente dirigida al desarrollo de las familias de productos de FPGAs de Xilinx (por ejemplo, Spartan-6).
+\emph{Xilinx ISE}\textsuperscript\textregistered\hspace{0.05pt} (\emph{Integrated Synthesis Environment}) es una herramienta de software de Xilinx\textsuperscript\textregistered\hspace{0.05pt} para la síntesis y análisis de diseños HDL, la cual está principalmente dirigida al desarrollo de las familias de productos de FPGAs de Xilinx\textsuperscript\textregistered\hspace{0.05pt} (por ejemplo, Spartan-6).
 
-Posee las mismas funcionalidades descritas anteriormente para \emph{Intel Quartus Prime}, pero además incluye otros componentes, como el \emph{Embedded Development Kit (EDK)}, \emph{Software Development Kit (SDK)}, y \emph{ChipScope Pro}. Por último, también incluye software que permite la simulación y \emph{test bench} del código, como \emph{ModelSim} e \emph{ISim}, los cuales son utilizados en el presente trabajo para verificar la correcta implementación de los algoritmos de control a lo largo del Capítulo \ref{implementacion-control}.
+Posee las mismas funcionalidades descritas anteriormente para \emph{Intel Quartus Prime\textsuperscript\textregistered\hspace{0.05pt}}, pero además incluye otros componentes, como el \emph{Embedded Development Kit (EDK)}, \emph{Software Development Kit (SDK)}, y \emph{ChipScope Pro}. Por último, también incluye software que permite la simulación y \emph{test bench} del código, como \emph{ModelSim} e \emph{ISim}, los cuales son utilizados en el presente trabajo para verificar la correcta implementación de los algoritmos de control a lo largo del Capítulo \ref{implementacion-control}.
 
 La interfaz de usuario principal del ISE es el \emph{Project Navigator}, el cual incluye la jerarquía de diseño (\emph{sources}), un editor de código (\emph{workplace}), una consola de salida (\emph{transcript}), y un árbol de procesos (\emph{processes}).
 
 La jerarquía de diseño consiste en archivos de diseño (módulos), cuyas dependencias son interpretadas por el ISE y presentadas con una estructura de árbol. Para los diseños de chip único puede haber un módulo principal, con otros módulos incluidos en este, similar a la subrutina \texttt{main()} en programas C++.
 
-Actualmente, Xilinx ISE fue descontinuado a favor de \emph{Vivado Design Suite}, el cual posee el mismo rol que ISE con características adicionales para el desarrollo de SoCs. Xilinx publicó la última versión en octubre de 2013 (versión 14.7) y no se prevén más actualizaciones. 
+Actualmente, Xilinx ISE\textsuperscript\textregistered\hspace{0.05pt} fue descontinuado a favor de \emph{Vivado Design Suite}\textsuperscript\textregistered\hspace{0.05pt}, el cual posee el mismo rol que ISE con características adicionales para el desarrollo de SoCs. Xilinx\textsuperscript\textregistered\hspace{0.05pt} publicó la última versión en octubre de 2013 (versión 14.7) y no se prevén más actualizaciones. 
 
 
 \section{Resumen}
 
-En este capítulo fue presentada la arquitectura FPGA junto a dos de los lenguajes de programación de hardware más populares para su programación, como a su vez herramientas de su entorno de desarrollo que permiten sintetizar y compilar el código creado para tanto FPGAs de Xilinx como Altera.
+En este capítulo fue presentada la arquitectura FPGA junto a dos de los lenguajes de programación de hardware más populares para su programación, como a su vez herramientas de su entorno de desarrollo que permiten sintetizar y compilar el código creado para tanto FPGAs de Xilinx\textsuperscript\textregistered\hspace{0.05pt} como Intel\textsuperscript\textregistered\hspace{0.05pt}.
 
 En capítulos posteriores se podrán ver ciertas de estas herramientas en acción, al querer implementar el sistema de control diseñado.
