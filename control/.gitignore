@@ -59,6 +59,7 @@ webtalk_impact.xml
 xaw2verilog.log
 
 # project-wide generated files
+*.html
 *.gise
 *.xwbt
 *.ncd
