@@ -13,7 +13,7 @@ entity uart_tx is
 end uart_tx;
 
 architecture behavioral of uart_tx is
-	signal prescaler : integer range 0 to 389 := 0;
+	signal prescaler : integer range 0 to 33 := 0;
 	signal index : integer range 0 to 159 := 0;
 	signal data_sgn : std_logic_vector(159 downto 0);
 	signal tx_flag : std_logic := '0';
@@ -79,13 +79,13 @@ begin
 				data_sgn(158 downto 151) <= x"0" & data(63 downto 60);
 			end if;
 			if (tx_flag = '1') then
-				if (prescaler < 389) then
+				if (prescaler < 33) then
 					prescaler <= prescaler + 1;
 				else
 					prescaler <= 0;
 				end if;
  
-				if (prescaler = 194) then
+				if (prescaler = 16) then
 					tx <= data_sgn(index);
 					if (index < 159) then
 						index <= index + 1;
