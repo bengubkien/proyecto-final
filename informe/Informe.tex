@@ -17,7 +17,7 @@
 \usepackage[final, hidelinks]{hyperref}
 \usepackage[default,scale=0.95]{opensans}
 \usepackage[T1]{fontenc}
-\usepackage[spanish]{babel}
+\usepackage[spanish, es-nodecimaldot]{babel}
 \usepackage{wrapfig}
 \usepackage{fancyhdr}
 \usepackage{makecell}
@@ -40,6 +40,8 @@
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Tabla}
 
+\DeclareSIUnit{\sample}{S}
+
 \addbibresource{Referencias.bib}
 
 \begin{document}
@@ -50,9 +52,15 @@
 
 \input{Secciones y capítulos/Título.tex}
 
-\input{Secciones y capítulos/Resumen y abstract.tex}
+\input{Secciones y capítulos/Agradecimientos.tex}
 
+\input{Secciones y capítulos/Resumen y abstract.tex}
+ 
 \tableofcontents
+
+\listoffigures
+
+\listoftables
 
 \input{Secciones y capítulos/Introducción.tex}
 
@@ -68,8 +76,15 @@
 
 \input{Secciones y capítulos/Ensayos y resultados experimentales.tex}
 
-\pagebreak
-
-\printbibliography[heading=bibintoc, title={Referencias}]
+\input{Secciones y capítulos/Conclusiones.tex}
  
+\appendix
+ 
+\input{Secciones y capítulos/Error de representación de datos.tex}
+
+\pagebreak
+     
+\printbibliography[heading=bibintoc, title={Referencias}]
+  
 \end{document}
+ 

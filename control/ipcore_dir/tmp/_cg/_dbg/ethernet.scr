@@ -1,0 +1,18 @@
+set -xsthdpdir "./_cg/_dbg/ethernet_xsd"
+run
+-ifn "./_cg/_dbg/ethernet.prj"
+-ifmt MIXED
+-ofmt NGC
+-ofn "./_cg/_dbg/ethernet.ngc"
+-p xc6slx16-2csg324
+-iobuf NO
+-work_lib work
+-ent ethernet
+-arch spartan6
+-top ethernet
+-bus_delimiter <>
+-lso "./_cg/_dbg/_default.lso"
+-iobuf no
+-uc "/home/control/ipcore_dir/tmp/_cg/_dbg/ethernet.xcf"
+-p spartan6
+-resource_sharing yes

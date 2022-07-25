@@ -1,0 +1,22 @@
+Release 14.7 - xst P.20131013 (lin64)
+Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
+--> 
+Parameter xsthdpdir set to ./_cg/_dbg/ethernet_xsd
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.06 secs
+ 
+--> 
+WARNING:Xst:3164 - Option "-iobuf" found multiple times in the command line. Only the first occurence is considered.
+WARNING:Xst:3164 - Option "-p" found multiple times in the command line. Only the first occurence is considered.
+ERROR:Xst:1585 - Cannot open file '/home/control/ipcore_dir/tmp/_cg/_dbg/ethernet.xcf'. Please make sure that the file exists and that you have read permission for it.
+--> 
+
+
+Total memory usage is 265628 kilobytes
+
+Number of errors   :    1 (   0 filtered)
+Number of warnings :    2 (   0 filtered)
+Number of infos    :    0 (   0 filtered)
+

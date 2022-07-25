@@ -52,10 +52,10 @@ Las llaves $\mathrm{S_1}$ y $\mathrm{S_2}$ trabajan en forma complementaria: cua
 
 \subsection{Parametrizado mediante ciclo de trabajo}
 
-Para unificar las Ecuaciones \ref{sistema-modelo-1} y \ref{sistema-modelo-2} hallados para el convertidor elevador en un solo sistema, se define la acción de control $u(t)$ de la siguiente forma:
+Para unificar las Ecuaciones \ref{sistema-modelo-1} y \ref{sistema-modelo-2} hallados para el convertidor elevador en un solo sistema, se define la acción de control $d(t)$ de la siguiente forma:
 
 \[
-  u(t) = \left\{\begin{alignedat}{2}
+  d(t) = \left\{\begin{alignedat}{2}
     & 1 &\quad  \text{$S_1$ conduce y $S_2$ no conduce} \\
     & 0 &\quad  \text{$S_1$ no conduce y $S_2$ conduce} \\
   \end{alignedat}\right.
@@ -66,9 +66,9 @@ Implementando esta condición para unir los sistemas de ecuaciones mencionados a
 \begin{equation}
   \boxed{
     \begin{split}
-      & L \frac{di_L(t)}{dt} = v_s(t) - \left[1-u(t)\right]v_o(t) \vspace{0.5cm}
+      & L \frac{di_L(t)}{dt} = v_s(t) - \left[1-d(t)\right]v_o(t) \vspace{0.5cm}
       \\
-      & C \frac{dv_o(t)}{dt} = \left[1-u(t)\right] i_L(t)- \frac{v_o(t)}{R}
+      & C \frac{dv_o(t)}{dt} = \left[1-d(t)\right] i_L(t)- \frac{v_o(t)}{R}
   \end{split}
     }
   \label{sistema-modelo-param}
@@ -80,14 +80,14 @@ Este sistema de ecuaciones parametrizado es el típicamente usado para represent
 
 En esta etapa se realiza una aproximación para poder simplificar las ecuaciones que definen el comportamiento de los mismos y así facilitar el tratamiento de los modelos resultantes.
 
-Las Ecuaciones \ref{sistema-modelo-param} describen un \emph{sistema de estructura variable no lineal}, esto significa que el convertidor elevador se comporta como diferentes sistemas no lineales continuos en diferentes regiones de su estado de espacios, y este comportamiento se encuentra dictado por una acción de control $u(t)$ discontinua. Esto presenta una complejidad elevada en el análisis y control del sistema.
+Las Ecuaciones \ref{sistema-modelo-param} describen un \emph{sistema de estructura variable no lineal}, esto significa que el convertidor elevador se comporta como diferentes sistemas no lineales continuos en diferentes regiones de su estado de espacios, y este comportamiento se encuentra dictado por una acción de control $d(t)$ discontinua. Esto presenta una complejidad elevada en el análisis y control del sistema.
 
 Una aproximación factible es el uso de \emph{medias móviles}, en las que cada señal se sustituye por su promedio durante un período de conmutación $T$. Este método permite modelar al sistema como uno de estructura no variable, debido a que la señal de control es continua bajo esta aproximación. Otra ventaja de las medias móviles es que al aplicarlo se obtiene la parte dominante de las señales y elimina las pequeñas perturbaciones, como el \emph{ripple} de conmutación, el cual no es de interés al diseñar el sistema de control para el conmutador.
 
 Utilizando el método de promediado presentado en \cite{erickson} y \cite{hart} para simplificar las ecuaciones que rigen la dinámica del sistema:
 
 \begin{equation}
-  \left\langle x(t) \right\rangle_T = \frac{1}{T} \int_t^{t+T} x(\tau) \, d\tau
+  \overline{x}(t) = \frac{1}{T} \int_t^{t+T} x(\tau) \, d\tau
   \label{promediado}
 \end{equation}
 
@@ -96,15 +96,13 @@ Puede demostrarse que aplicando la Ecuación \ref{promediado} a las Ecuaciones \
 \begin{equation}
   \boxed{
   \begin{split}
-    & L \frac{d\left\langle i_L(t) \right\rangle_T}{dt} = \left\langle v_s(t) \right\rangle - \left[1-d(t)\right] \left\langle v_o(t) \right\rangle_T 
+    & L \frac{d \overline{i_L}(t)}{dt} = \overline{v_s}(t) - \left[1-\overline{d}(t)\right] \overline{v_o}(t) 
     \\
-    & C \frac{d \left\langle v_o(t) \right\rangle_T}{dt} = \left[1-d(t)\right] \left\langle i_L(t) \right\rangle_T - \frac{\left\langle v_o(t) \right\rangle_T}{R}
+    & C \frac{d \overline{v_o}(t)}{dt} = \left[1-\overline{d}(t)\right] \overline{i_L}(t) - \frac{\overline{v_o}(t)}{R}
   \end{split}
   }
   \label{sistema-modelo-prom}
 \end{equation}
-
-Siendo $d(t) = \left\langle u(t) \right\rangle_T$.
 
 Cabe aclarar que es posible hallar un modelo promediado del convertidor trabajando en modo de conducción discontinua (MCD) \cite{jiansun}. Tal desarrollo no es presentado en este informe ya que escapa a los objetivos del presente trabajo.
 
@@ -136,10 +134,10 @@ Puede observarse que el comportamiento en este punto de trabajo coincide con el 
 
 Conocido el comportamiento del sistema en régimen de estado estacionario, se procede a la linealización del modelo. Este procedimiento consiste en realizar una aproximación de primer orden de las ecuaciones no lineales que describen al sistema, en un entorno muy cercano al punto de trabajo.
 
-Para esto, primero debe construirse un \emph{modelo de pequeña señal} alrededor del punto de trabajo. Si se asume que el ciclo de trabajo promedio $d(t)$ es igual a un valor de estado estacionario $D$ más una perturbación denotada por $\hat{d}(t)$ se obtiene:
+Para esto, primero debe construirse un \emph{modelo de pequeña señal} alrededor del punto de trabajo. Si se asume que el ciclo de trabajo promedio $\overline{d}(t)$ es igual a un valor de estado estacionario $D$ más una perturbación denotada por $\hat{d}(t)$ se obtiene:
 
 \begin{equation}
-  \left\langle u(t) \right\rangle_T = d(t) = D_{ee} + \hat{d}(t)
+  \overline{d}(t) = D_{ee} + \hat{d}(t)
   \label{ciclo-lineal} 
 \end{equation}
 
@@ -147,9 +145,9 @@ Se asume que el valor de la perturbación $\hat{d}(t)$ es mucho menor que el val
 
 \begin{equation}
   \begin{split}
-    & \left\langle v_o(t) \right\rangle_T = V_{o_{ee}} + \hat{v_o}(t)
+    & \overline{v_o}(t) = V_{o_{ee}} + \hat{v_o}(t)
     \\
-    & \left\langle i_L(t) \right\rangle_T = I_{L_{ee}} + \hat{i_L}(t)
+    & \overline{i_L}(t) = I_{L_{ee}} + \hat{i_L}(t)
   \end{split}
   \label{sistema-modelo-prom-ee}
 \end{equation}
@@ -220,33 +218,33 @@ Esta impracticabilidad se demuestra asumiendo inicialmente que la tensión de sa
 
 \begin{equation*}
   \begin{split}
-    & L \frac{d\left\langle i_L(t) \right\rangle_T}{dt} = V_s - \left[1-d(t)\right] \, V_{o_{ee}}
+    & L \frac{d \overline{i_L}(t)}{dt} = V_s - \left[1-\overline{d}(t)\right] \, V_{o_{ee}}
     \\
-    & 0 = \left[1-d(t)\right] \left\langle i_L(t) \right\rangle_T - \frac{V{o_{ee}}}{R}
+    & 0 = \left[1-\overline{d}(t)\right] \overline{i_L}(t) - \frac{V_{o_{ee}}}{R}
   \end{split}
 \end{equation*}
 
 Realizando un reemplazo sobre el ciclo de trabajo promediado se obtiene:
 
 \begin{equation}
-  L \frac{d\left\langle i_L(t) \right\rangle_T}{dt} = V_s - \frac{V_{o_{ee}^2}}{R \, \left\langle i_L(t) \right\rangle_T}
+  L \frac{d \overline{i_L}(t) }{dt} = V_s - \frac{V_{o_{ee}^2}}{R \, \overline{i_L}(t)}
   \label{prueba-inestabilidad-lazo}
 \end{equation}
 
 Y efectuando otro reemplazo con la potencia de salida $P_{o_{ee}} = V_{o_{ee}}^2/R$ se obtiene:
 
 \begin{equation*}
-  L \frac{d\left\langle i_L(t) \right\rangle_T}{dt} = V_s - \frac{P_{o_{ee}}}{\left\langle i_L(t) \right\rangle_T}
+  L \frac{d \overline{i_L}(t)}{dt} = V_s - \frac{P_{o_{ee}}}{ \overline{i_L}(t)}
 \end{equation*}
 
 Dado que la potencia de salida es siempre menor a la de la entrada debido a pérdidas, se tiene:
 
 \begin{equation*}
-  \frac{P{o_{ee}}}{\left\langle i_L(t) \right\rangle_T} < \frac{P{s_{ee}}}{\left\langle i_L(t) \right\rangle_T}
+  \frac{P_{o_{ee}}}{\overline{i_L}(t)} < \frac{P_{s_{ee}}}{ \overline{i_L}(t)}
 \end{equation*}
 
 \begin{equation*}
-  \boxed{\frac{P{o_{ee}}}{\left\langle i_L(t) \right\rangle_T} < V_s \quad \forall \quad t}
+  \boxed{\frac{P_{o_{ee}}}{\overline{i_L}(t)} < V_s \quad \forall \quad t}
 \end{equation*}
 
 Esto implica que el miembro derecho de la Ecuación \ref{prueba-inestabilidad-lazo} es mayor que cero para todo instante de tiempo, por lo que la derivada de la corriente es siempre positiva, y en consecuencia la corriente por el inductor diverge. 
@@ -303,7 +301,7 @@ Ahora, deben seleccionarse valores de tensión de entrada $V_s$, ciclo de trabaj
   $R$        & \SI{15}{\ohm}  \\
   $V_{o_{ee}}$ & \SI{50}{\volt} 
   \end{tabular}
-  \caption{Punto de trabajo alrededor del cual se linealiza el convertidor}
+  \caption{Punto de trabajo alrededor del cual se linealiza el convertidor.}
   \label{punto-trabajo-convertidor}
 \end{table}
 
@@ -355,12 +353,12 @@ Los controladores PID (Figura \ref{esquema-pid}) son controladores que tienen un
 \begin{itemize}
   \item La \textbf{acción proporcional} es proporcional a la señal error que ingresa al controlador, dada por la expresión
   \begin{equation*}
-    u(t) = K_p \, e(t) = K_p \left( r(t) - y(t) \right)
+    d_P(t) = K_p \, e(t) = K_p \left( r(t) - y(t) \right)
   \end{equation*}
   en donde $K_p$ es la ganancia proporcional. Su significado es sencillo, ya que su comportamiento es aumentar la variable de control cuando el error es grande, con su signo apropiado. La mayor desventaja de usar un controlador proporcional puro es que produce un error de estado estacionario, aún cuando la planta presente una dinámica integral (es decir, su función de transferencia presenta un polo en el origen del plano complejo).
   \item La \textbf{acción integral} es proporcional a la integral del error del control, es decir
   \begin{equation*}
-    u(t) = K_i \, \int_{0}^{t} e(\tau) \, d\tau
+    d_I(t) = K_i \, \int_{0}^{t} e(\tau) \, d\tau
   \end{equation*}
   en donde $K_i$ es la ganancia integral, y su función de transferencia es:
   \begin{equation*}
@@ -369,10 +367,10 @@ Los controladores PID (Figura \ref{esquema-pid}) son controladores que tienen un
 
   La presencia del polo en el origen permite la reducción a cero del error de estado estacionario cuando una señal escalón es aplicada en la referencia o cuando ocurre una perturbación en la carga. Aún así, cuando se presenta una acción integral, el llamado efecto \emph{windup} puede ocurrir en el caso de que se presente una saturación en la variable de control.
 
-  Esta situación se da debido a que el integrador del controlador no conoce los límites físicos del sistema a controlar y por lo tanto, ante ciertas situaciones (por ejemplo, un gran cambio en la referencia), es posible que la acción de control generada exceda estas limitaciones, lo que puede causar un sobrepico en alguna variable de estado del sistema. Para evitar este problema se utilizan métodos \emph{anti-windup}.
+  Esta situación se da debido a que el integrador del controlador no detiene su integración al superar los límites físicos del sistema a controlar y por lo tanto, ante ciertas situaciones (por ejemplo, un gran cambio en la referencia), es posible que la acción de control generada exceda estas limitaciones, lo que puede causar un sobrepico en alguna variable de estado del sistema. Para evitar este problema se utilizan métodos \emph{anti-windup}.
   \item Mientras la acción proporcional se basa en el valor presente del error de control y la acción integral se basa en sus valores pasados, la \textbf{acción derivativa} se basa en predecir futuros valores de esta señal. Una ley de control derivativa ideal puede ser expresada como:
   \begin{equation*}
-    u(t) = K_d \, \frac{d e(t)}{dt}
+    d_D(t) = K_d \, \frac{d e(t)}{dt}
   \end{equation*}
   en donde $K_d$ es la ganancia derivativa, y su función de transferencia es 
   \begin{equation*}
@@ -392,8 +390,8 @@ Y las ganancias proporcional e integral $K_p$ y $K_i$ deben ser balanceadas a pa
 \begin{itemize}
   \item El término integral se limita a un valor predefinido.
   \item La integración se detiene cuando el error es mayor a un umbral predefinido, es decir, cuando la variable de estado del proceso está muy lejos de la referencia.
-  \item La integración se detiene caundo la variable de control se satura, es decir, cuando $u \neq u'$.
-  \item La integración se detiene cuando la variable de control se satura, y tiene la misma señal que la señal error, es decir, cuando $u \cdot e > 0$.
+  \item La integración se detiene cuando la variable de control se satura, es decir, cuando $d \neq d'$.
+  \item La integración se detiene cuando la variable de control se satura, y tiene la misma señal que la señal error, es decir, cuando $d \cdot e > 0$.
 \end{itemize}
 
 El método utilizado en este trabajo es el primero, en el cual se realiza una saturación del término integral.

@@ -3,14 +3,14 @@
 
 \section{Introducción}
 
-En este capítulo se sintetiza e implementa la estrategia de control diseñada en el capítulo anterior. Debido a las características del lenguaje de programación a utilizar, los componentes del lazo de control deben ser programados individualmente, para después ser ensamblados en el sistema de control diseñado. Debido a esta propiedad de VHDL, además de la programación de cada componente, se realiza una simulación o \emph{test bench} para corroborar su correcto funcionamiento. Las herramientas utilizadas aquí fueron el entorno de desarrollo Xilinx ISE\textsuperscript\textregistered \hspace{0.6pt} y los simuladores de código HDL ISim\textsuperscript\textregistered \hspace{0.6pt} y ModelSim\textsuperscript\textregistered \hspace{0.6pt}, los cuales fueron descritos en el Capítulo \ref{cap-fpga} Sección \ref{desarrollo-fpga}.
+En este capítulo se sintetiza e implementa la estrategia de control diseñada en el capítulo anterior. Debido a las características del lenguaje de programación a utilizar, los componentes del lazo de control deben ser programados individualmente, para después ser ensamblados en el sistema de control diseñado. Debido a esta propiedad de VHDL, además de la programación de cada componente, se realiza una simulación o \emph{test bench} para corroborar su correcto funcionamiento. Las herramientas utilizadas aquí fueron el entorno de desarrollo Xilinx ISE\textsuperscript\textregistered \hspace{0.6pt} y los simuladores de código HDL ISim\textsuperscript\textregistered \hspace{0.6pt} y ModelSim\textsuperscript\textregistered\hspace{0.6pt}, los cuales fueron descritos en el Capítulo \ref{cap-fpga}, Sección \ref{desarrollo-fpga}.
 
 \section{Placa de desarrollo a utilizar}
 
 \begin{wrapfigure}{r}{0.42\textwidth}
-    \vspace{-10pt}
+    \vspace{-15pt}
     \begin{center}
-      \includegraphics[width=0.41\textwidth]{Imágenes/Nexys 3.png}
+      \includegraphics[width=0.39\textwidth]{Imágenes/Nexys 3.png}
     \end{center}
     \caption{Placa de desarrollo Nexys 3.}
     \label{nexys3}
@@ -28,14 +28,14 @@ Para la programación de la Nexys 3 es necesario utilizar el entorno de desarrol
 
 La primer pieza del lazo de control programada fue el controlador de los conversores analógico-digitales. Previo a esta tarea fue necesario comprender el protocolo de comunicación del \emph{Pmod AD1}, el cual está compuesto por dos ADC \emph{AD7476A} de Analog Devices. El protocolo utilizado por estos conversores es \emph{SPI-like} con una señal de \emph{Chip Select} ($\overline{\mbox{CS}}$), con la única diferencia de que ambas líneas de datos (\emph{MOSI} y \emph{MISO}) son diseñadas para operar únicamente como salidas, y por lo tanto ambas son definidas como líneas de datos \emph{Master-In-Slave-Out}.
 
-Los ADCs poseen una resolución de 12 bits, con una frecuencia de muestreo máxima de 1MS/s y un filtro antialiasing \cite{ad7476a}. Ambos conversores transforman una señal que va de 0 a $\mathrm{V_{DD}}$, en un valor digital con un rango de 0 a 4095. En la Figura \ref{diagramas-adc} pueden observarse los diagramas circuitales del Pmod AD1 y de los AD7476A.
+Los ADCs poseen una resolución de 12 bits, con una frecuencia de muestreo máxima de 1 MS/s y un filtro antialiasing \cite{ad7476a}. Ambos conversores transforman a una señal que va de 0 a $\mathrm{V_{DD}}$, en un valor digital con un rango de 0 a 4095. En la Figura \ref{diagramas-adc} pueden observarse los diagramas circuitales del Pmod AD1 y de los AD7476A.
 
 \begin{figure}[hbt!]
     \centering
     \subfloat[Pmod AD1.]{\includegraphics[width=0.3\textwidth]{Imágenes/Conversor analógico-digital/Pmod AD1.pdf}}    
     \hspace{10mm}
     \subfloat[AD7476A.]{\includegraphics[width=0.27\textwidth]{Imágenes/Conversor analógico-digital/AD7476A.pdf}}
-    \caption{Diagramas de los circuitos del Pmod y ADC.}
+    \caption{Diagramas de los circuitos del Pmod y ADCs.}
     \label{diagramas-adc}
 \end{figure}
 
@@ -71,7 +71,7 @@ En este controlador, \texttt{sclk} es un reloj de frecuencia \SI{12.5}{\mega\her
 
 \subsection{Filtro digital}
 
-Una vez muestreada la corriente, es importante que el lazo interno de corriente reciba un valor medio para que su dinámica resulte suave y no se produzcan exabruptos que puedan poner en peligro al sistema. Por lo tanto, un filtro es diseñado para atenuar el \emph{ripple} de la corriente, resultado de la conmutación de las llaves del convertidor como fue mencionado en capítulos anteriores y puede observarse en la Figura \ref{formas-onda-elevador}b. Por eso mismo, se implementa un filtro pasabajos digital de primer orden, con frecuencia de corte $f_c$ de 1.5kHz. La razón de esta elección fue mencionada en el Capítulo \ref{diseno-control}, Sección \ref{diseno-filtro-corriente}. La Ecuación \ref{filtro-corriente-discretizado} representa a la transferencia discreta del filtro a implementar. Desarrollando la función de transferencia:
+Una vez muestreada la corriente, es importante que el lazo interno de corriente reciba un valor medio para que su dinámica resulte suave y no se produzcan exabruptos que puedan poner en peligro al sistema. Por lo tanto, un filtro es diseñado para atenuar el \emph{ripple} de la corriente, resultado de la conmutación de las llaves del convertidor como fue mencionado en capítulos anteriores y puede observarse en la Figura \ref{formas-onda-elevador}b. Por eso mismo, se implementa un filtro pasabajos digital de primer orden, con frecuencia de corte $f_c$ de \SI{1.5}{\kilo\hertz}. La razón de esta elección fue mencionada en el Capítulo \ref{diseno-control}, Sección \ref{diseno-filtro-corriente}. La Ecuación \ref{filtro-corriente-discretizado} representa a la transferencia discreta del filtro a implementar. Desarrollando la función de transferencia:
 
 \begin{equation*}
     z \, Y(z) - 0.98492 \, Y(z) = 0.0150796 \, X(z)
@@ -101,19 +101,19 @@ La implementación del filtro puede ser optimizada para que se utilice un único
 
 Con $k_o = 0.0150796$ y $k_1 = 0.98492$. Debido a la resolución necesaria para representar estos coeficientes, se eligió una síntesis a código HDL con representación en punto fijo de 32 bits de longitud de palabra, con 16 bits para representar la fracción.
 
-Generado el código de VHDL, se realiza nuevamente otro \emph{test bench} para probar su funcionamiento. Para esta simulación se inyecta una onda triangular con amplitud unitaria de 20kHz montada sobre una señal continua de valor 1, de forma de emular el comportamiento de la corriente del convertidor. El resultado puede verse en la Figura \ref{simulacion-filtro}, en el cual se observa un transitorio y luego el correcto filtrado del \emph{ripple} de la entrada.
+Generado el código de VHDL, se realiza nuevamente otro \emph{test bench} para probar su funcionamiento. Para esta simulación se inyecta una onda triangular con amplitud unitaria de \SI{20}{\kilo\hertz} montada sobre una señal continua de valor 1, de forma de emular el comportamiento de la corriente del convertidor. El resultado puede verse en la Figura \ref{simulacion-filtro}, en el cual se observa un transitorio y luego el correcto filtrado del \emph{ripple} de la entrada.
 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.85\columnwidth]{Imágenes/Filtro digital/Simulación en ModelSim.pdf}    
-    \caption{Simulación realizada del controlador de los conversores.}
+    \caption{Simulación realizada del filtro digital.}
     \label{simulacion-filtro}
 \end{figure} 
 
 \subsection{Controlador proporcional-integral}
 \label{implementacion-pid}
 
-La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered\hspace{0.05pt} es el de la Figura \ref{estructura-pi}. En este diagrama pueden visualizarse dos saturaciones: la primera, llamada \texttt{saturation}, evita que la acción de control calculada por el PI exceda los límites inferiores y superiores impuestos por él; mientras que \texttt{clamping} cumple el rol de sistema \emph{anti-windup} (explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}). El tipo de datos para la representación de los parámetros diseñados fue de punto fijo de 32 bits de longitud de palabra, con 16 bits para la fracción.
+La programación en VHDL de los controladores PI fue realizada con el mismo procedimiento que el de los filtros digitales. El diagrama en bloques creado en Simulink\textsuperscript\textregistered\hspace{0.05pt} es el de la Figura \ref{estructura-pi}. En este diagrama pueden visualizarse dos saturaciones: la primera, llamada \texttt{saturation}, evita que la acción de control calculada por el PI exceda los límites inferiores y superiores impuestos por él; mientras que \texttt{clamping} cumple el rol de sistema \emph{anti-windup} (explicado en el Capítulo \ref{diseno-control}, Sección \ref{diseno-controladores-pid}). El tipo de datos para la representación de los parámetros del controlador PI de corriente fue de punto fijo de 32 bits de longitud de palabra con 16 bits para la fracción, mientras que para el controlador PI de tensión fue de 32 bits de palabra con 24 bits de fracción\footnote{Esta elección es justificada en el Apéndice \ref{apendice-error}.}.
 
 \begin{figure}[hbt!]
     \centering
@@ -181,7 +181,7 @@ Las llaves utilizadas controlan los siguientes componentes:
 
 \subsection{Comunicación UART}
 
-Un transmisor UART (del inglés \emph{Universal Asynchronous Receiver-Transmitter}) fue programado en el FPGA para poder enviar las mediciones y acciones de control calculadas a una computadora. Debido a que este tipo de comunicación consiste en paquetes de 10 bits (dos bits de inicio y fin, y ocho de datos), se decidió implementar un transmisor que sea capaz de enviar en 64 bits de datos, divididos de la siguiente manera:
+Un transmisor UART (del inglés \emph{Universal Asynchronous Receiver-Transmitter}) fue programado en el FPGA para poder enviar las mediciones y acciones de control calculadas a una computadora. Debido a que este tipo de comunicación consiste en paquetes de 10 bits (dos bits de inicio y fin, y ocho de datos), se decidió implementar un transmisor que sea capaz de enviar 64 bits de datos divididos de la siguiente manera:
 
 \begin{enumerate}
     \item 12 bits correspondientes a la medición de tensión de carga.
@@ -199,7 +199,7 @@ En la Figura \ref{uart} puede observarse el diagrama de tiempos de cada paquete 
     \label{uart}
 \end{figure} 
 
-Ya que en este tipo de comunicación asincrónica no es posible recibir los datos en orden, se utilizaron otros 64 bits para indexar cada paquete de datos. La recepción y reordenamiento de los paquetes transmitidos por la Nexys 3 fue hecho en MATLAB\textsuperscript\textregistered. Para poder ordenar cada paquete, cuatro bits de datos fueron utilizados para un número en hexadecimal (de 0 a F), y los otros cuatro bits para los datos a transmitir. En total son transmitidos 160 bits a una tasa de 256000 baudios.
+Ya que en este tipo de comunicación asincrónica no es posible recibir los datos en orden, se utilizaron otros 64 bits para indexar cada paquete de datos. La recepción y reordenamiento de los paquetes transmitidos por la Nexys 3 fue hecho en MATLAB\textsuperscript\textregistered. Para poder ordenar cada paquete, cuatro bits de datos fueron utilizados para un número en hexadecimal (de 0 a F), y los otros cuatro bits para los datos a transmitir. En total son transmitidos 160 bits a una tasa de 1 millón de baudios, lo que se traduce en una transmisión de \SI{400}{\kilo\sample/\second}.
 
 \section{Construcción del sistema de control}
 

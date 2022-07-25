@@ -14,6 +14,7 @@ iref = np.loadtxt('Datos/iref.txt')
 vo = np.loadtxt('Datos/vo.txt')
 
 # Referencia de corriente
+
 plt.figure('Referencia de corriente')
 plt.title('Referencia de corriente', pad=11)
 plt.plot(t[60300:], iref[60300:], '#00575f', linewidth=0.8)

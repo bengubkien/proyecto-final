@@ -7,13 +7,12 @@ from scipy import signal
 plt.rcParams['font.sans-serif'] = "Open Sans"
 plt.rcParams['font.family'] = "sans-serif"
 
-t = np.linspace(0, 4, 10000)
+t = np.linspace(0, 400, 10000)
 
 # Escalón positivo de resistencia
 
 iL_R_20_40 = np.genfromtxt('Datos/iL_R_20_40.txt', delimiter=',')
 u_R_20_40 = np.genfromtxt('Datos/u_R_20_40.txt', delimiter=',')
-t = np.linspace(0, 10000, 10000)
 
 b, a = signal.butter(25, 0.15)
 zi = signal.lfilter_zi(b, a)
@@ -37,7 +36,6 @@ plt.savefig('Escalón positivo de resistencia.pdf')
 
 iL_R_40_20 = np.genfromtxt('Datos/iL_R_40_20.txt', delimiter=',')
 u_R_20_40 = np.genfromtxt('Datos/u_R_40_20.txt', delimiter=',')
-t = np.linspace(0, 4, 10000)
 
 b, a = signal.butter(25, 0.15)
 zi = signal.lfilter_zi(b, a)

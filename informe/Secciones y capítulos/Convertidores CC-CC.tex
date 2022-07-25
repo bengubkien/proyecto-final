@@ -313,31 +313,29 @@ En este trabajo se utiliza un convertidor CC-CC bidireccional en corriente const
     \label{convertidor-leici}
 \end{figure} 
 
-\begin{figure}
-\begingroup
-\renewcommand{\figurename}{Tabla}
-\setcounter{figure}{0}
-\centering
-\subfloat[Parámetros reelevantes]{
+\begin{table}
+    \centering
     \begin{tabular}{lll}
-        \label{parametros-convertidor}
-        Especificación                     & Valor & Unidad \\
-        \hline
-        \\
-        Potencia máxima                    & 300   & W      \\
-        \makecell[l]{Tensión continua \\ en la salida}      & 60    & V      \\
-        \makecell[l]{Tensión nominal  \\ en la entrada}      & 20    & A      \\
-        \makecell[l]{Corriente nominal \\ en la entrada}    & 15    & A      \\
-        \makecell[l]{Rizado pico a pico \\ de la corriente} & 3.33  & A      \\
-        \makecell[l]{Frecuencia de \\ conmutación}          & 20    & kHz     \\
-        Inductancia                        & 200   & H      \\
-        \makecell[l]{Corriente máxima \\ por el inductor}   & 16.67 & A      \\
-        Capacitancia                       & 2200  & \SI{}{\micro\farad}
+            Especificación                     & Valor & Unidad \\
+            \hline
+            \\
+            Potencia máxima                    & 300   & W      \\
+            \makecell[l]{Tensión continua \\ en la salida}      & 60    & V      \\
+            \makecell[l]{Tensión nominal  \\ en la entrada}      & 20    & A      \\
+            \makecell[l]{Corriente nominal \\ en la entrada}    & 15    & A      \\
+            \makecell[l]{Rizado pico a pico \\ de la corriente} & 3.33  & A      \\
+            \makecell[l]{Frecuencia de \\ conmutación}          & 20    & kHz     \\
+            Inductancia                        & 200   & H      \\
+            \makecell[l]{Corriente máxima \\ por el inductor}   & 16.67 & A      \\
+            Capacitancia                       & 2200  & \SI{}{\micro\farad}
     \end{tabular}
-}
-\subfloat[Componentes de la etapa de potencia]{
+    \label{parametros-convertidor}
+    \caption{Parámetros eléctricos del convertidor CC-CC.}
+\end{table}
+
+\begin{table}
+    \centering
     \begin{tabular}{lll}
-        \label{componentes-convertidor}
         Componente          & Denominación    & Comentarios                                                    \\
         \hline\\
         \makecell[l]{Núcleo del \\ inductor} & ETD-5922 CF-138 & \makecell[l]{Permeabilidad relativa \\ $\mathrm{\mu_r}$ de 2500}                           \\
@@ -346,10 +344,10 @@ En este trabajo se utiliza un convertidor CC-CC bidireccional en corriente const
         Drivers             & IR2110          & \makecell[l]{Tiempo de encendido \\ y apagado de \SI{120}{\nano\second} y \SI{94}{\nano\second} \\ respectivamente} \\
         \makecell[l]{Diodo de \\ bootstrap}  & MUR 460         & \makecell[l]{Capacitancia de \SI{1}{\micro\farad} \\ con resistencia de \SI{2.2}{\ohm}}               
     \end{tabular}
-} 
-\caption{Tablas con especificaciones del convertidor CC-CC.}
-\endgroup
-\end{figure}    
+    \label{componentes-convertidor}
+    \caption{Componentes eléctricos del convertidor CC-CC.}
+
+\end{table}   
 
 \section{Resumen}
 
